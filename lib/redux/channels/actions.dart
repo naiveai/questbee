@@ -4,10 +4,13 @@ import 'package:dio/dio.dart';
 
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
+import 'package:flutter_redux_navigation/flutter_redux_navigation.dart';
 
 import 'package:questbee/redux/app_state.dart';
 
 import 'package:questbee/models/channels.dart';
+
+import 'package:questbee/pages/questions_page.dart';
 
 ThunkAction<AppState> loadChannels(Reddit reddit) {
   return (Store<AppState> store) async {
@@ -16,9 +19,13 @@ ThunkAction<AppState> loadChannels(Reddit reddit) {
                 Dio().get("https://questbee-data.s3.amazonaws.com/channel_subreddits.json")).data);
 
     var channelFutures = channelSubbredditNames.map((String name) async {
-      var humanName = (await reddit.subreddit(name).populate()).title;
+      var channelSubreddit = await reddit.subreddit(name).populate();
 
-      return ChannelModel(name, humanName);
+      return ChannelModel(
+        name,
+        channelSubreddit.title,
+        iconImage: channelSubreddit.iconImage,
+      );
     });
 
     var channels = await Future.wait(channelFutures);
@@ -31,4 +38,13 @@ class ChannelsLoadedAction {
   ChannelsLoadedAction(this.channels);
 
   List<ChannelModel> channels;
+}
+
+ThunkAction<AppState> openChannelQuestions(ChannelModel channel) {
+  return (Store<AppState> store) {
+    store.dispatch(NavigateToAction.push(
+      QuestionsPage.route,
+      arguments: {'channel': channel}
+    ));
+  };
 }

@@ -9,6 +9,6 @@ class ChannelsState {
   final List<ChannelModel> channels;
 
   factory ChannelsState.initialState() {
-    return ChannelsState();
+    return ChannelsState(channels: []);
   }
 }

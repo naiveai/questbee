@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:questbee/pages/login_page.dart';
 import 'package:questbee/pages/channels_page.dart';
 import 'package:questbee/pages/oauth_pages.dart';
+import 'package:questbee/pages/questions_page.dart';
 
 class App extends StatelessWidget {
   App({Key key, this.store}) : super(key: key);
@@ -43,6 +44,7 @@ class App extends StatelessWidget {
                 RedditOAuthLauncherPage(),
             RedditOAuthRedirectPage.route: (context) =>
                 RedditOAuthRedirectPage(),
+            QuestionsPage.route: (context) => QuestionsPage(),
           },
         ),
       ),

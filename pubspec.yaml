@@ -30,6 +30,12 @@ dependencies:
 
   dio: ^2.1.6
 
+  cached_network_image: ^0.8.0
+
+  grouped_buttons: ^1.0.4
+
+  auto_size_text: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
