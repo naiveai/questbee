@@ -1,0 +1,10 @@
+import 'package:questbee/redux/app_state.dart';
+import 'package:questbee/redux/reddit_auth/reducer.dart';
+import 'package:questbee/redux/channels/reducer.dart';
+
+AppState rootReducer(AppState state, dynamic action) {
+  return AppState(
+    redditState: redditReducer(state.redditState, action),
+    channelsState: channelsReducer(state.channelsState, action),
+  );
+}
