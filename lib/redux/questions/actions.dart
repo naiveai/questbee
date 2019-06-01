@@ -22,6 +22,7 @@ ThunkAction<AppState> loadQuestionsAction(Reddit reddit, String subredditName) {
         var questionInfo = json.decode(submission.selftext);
 
         return QuestionModel(
+          submission: submission,
           questionId: questionInfo['questionId'],
           numberOfCorrectAnswers: int.parse(questionInfo['numberOfCorrectAnswers']),
           answers: List<String>.from(questionInfo['answers']),
@@ -46,4 +47,13 @@ class AnswersChangedAction {
   List<String> answers;
 
   AnswersChangedAction(this.index, this.answers);
+}
+
+ThunkAction<AppState> submitQuestionAction(Reddit reddit, int questionIndex) {
+  return (Store<AppState> store) async {
+    var submission = store.state.questionsState.questions[questionIndex].submission;
+    var answers = store.state.questionsState.answers[questionIndex];
+
+    await submission.reply(json.encode({'answers': answers}));
+  };
 }

@@ -14,8 +14,6 @@ QuestionsState questionsReducer(QuestionsState state, dynamic action) {
 
     newAnswers[action.index] = action.answers;
 
-    print(newAnswers);
-
     return QuestionsState(
       questions: state.questions,
       answers: newAnswers,

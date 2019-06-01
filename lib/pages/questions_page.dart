@@ -46,6 +46,9 @@ class QuestionsPage extends StatelessWidget {
                   question: vm.questions[index],
                   onAnswersChanged: (List<String> answers) {
                     vm.onAnswersChanged(index, answers);
+                  },
+                  onSubmit: () {
+                    vm.onSubmit(reddit, index);
                   }
                 );
               },
@@ -59,26 +62,31 @@ class QuestionsPage extends StatelessWidget {
 }
 
 class _QuestionsViewModel {
-  _QuestionsViewModel({this.questions, this.onAnswersChanged});
+  _QuestionsViewModel({this.questions, this.onAnswersChanged, this.onSubmit});
 
   final List<QuestionModel> questions;
   final Function(int, List<String>) onAnswersChanged;
+  final Function onSubmit;
 
   static _QuestionsViewModel fromStore(Store<AppState> store) {
     return _QuestionsViewModel(
       questions: store.state.questionsState.questions,
       onAnswersChanged: (index, answers) {
         store.dispatch(AnswersChangedAction(index, answers));
+      },
+      onSubmit: (reddit, index) {
+        store.dispatch(submitQuestionAction(reddit, index));
       }
     );
   }
 }
 
 class Question extends StatefulWidget {
-  Question({Key key, @required this.question, @required this.onAnswersChanged}) : super(key: key);
+  Question({Key key, @required this.question, @required this.onAnswersChanged, @required this.onSubmit}) : super(key: key);
 
   final QuestionModel question;
   final Function(List<String>) onAnswersChanged;
+  final Function() onSubmit;
 
   @override
   _QuestionState createState() => _QuestionState();
@@ -135,7 +143,7 @@ class _QuestionState extends State<Question> {
                     children: <Widget>[
                       FlatButton(
                         child: Text('SUBMIT'),
-                        onPressed: () {},
+                        onPressed: widget.onSubmit,
                       ),
                     ],
                   ),

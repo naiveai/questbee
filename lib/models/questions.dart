@@ -1,7 +1,10 @@
+import 'package:draw/draw.dart';
+
 class QuestionModel {
-  QuestionModel({this.questionId, this.numberOfCorrectAnswers, this.answers,
+  QuestionModel({this.submission, this.questionId, this.numberOfCorrectAnswers, this.answers,
       this.questionBlocks});
 
+  final Submission submission;
   final String questionId;
   final int numberOfCorrectAnswers;
   final List<String> answers;
