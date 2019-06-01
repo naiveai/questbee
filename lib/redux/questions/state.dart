@@ -4,11 +4,15 @@ import 'package:questbee/models/questions.dart';
 
 @immutable
 class QuestionsState {
-  QuestionsState({this.questions});
+  QuestionsState({this.questions, this.answers});
 
   final List<QuestionModel> questions;
+  final List<List<String>> answers;
 
   factory QuestionsState.initialState() {
-    return QuestionsState(questions: []);
+    return QuestionsState(
+      questions: [],
+      answers: [],
+    );
   }
 }

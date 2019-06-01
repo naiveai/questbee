@@ -31,6 +31,9 @@ class QuestionsPage extends StatelessWidget {
           onInit: (store) {
             store.dispatch(loadQuestionsAction(reddit, channel.subredditName));
           },
+          onDispose: (store) {
+            store.dispatch(ClearQuestionsAction());
+          },
           builder: (BuildContext context, _QuestionsViewModel vm) {
             if (vm.questions.length == 0) {
               return Center(child: CircularProgressIndicator());
@@ -39,7 +42,12 @@ class QuestionsPage extends StatelessWidget {
             return ListView.separated(
               itemCount: vm.questions.length,
               itemBuilder: (BuildContext context, int index) {
-                return Question(question: vm.questions[index]);
+                return Question(
+                  question: vm.questions[index],
+                  onAnswersChanged: (List<String> answers) {
+                    vm.onAnswersChanged(index, answers);
+                  }
+                );
               },
               separatorBuilder: (BuildContext context, int index) {
                 return SizedBox(height: 15.0);
@@ -51,21 +59,26 @@ class QuestionsPage extends StatelessWidget {
 }
 
 class _QuestionsViewModel {
-  _QuestionsViewModel({this.questions});
+  _QuestionsViewModel({this.questions, this.onAnswersChanged});
 
   final List<QuestionModel> questions;
+  final Function(int, List<String>) onAnswersChanged;
 
   static _QuestionsViewModel fromStore(Store<AppState> store) {
     return _QuestionsViewModel(
       questions: store.state.questionsState.questions,
+      onAnswersChanged: (index, answers) {
+        store.dispatch(AnswersChangedAction(index, answers));
+      }
     );
   }
 }
 
 class Question extends StatefulWidget {
-  Question({Key key, @required this.question}) : super(key: key);
+  Question({Key key, @required this.question, @required this.onAnswersChanged}) : super(key: key);
 
   final QuestionModel question;
+  final Function(List<String>) onAnswersChanged;
 
   @override
   _QuestionState createState() => _QuestionState();
@@ -100,7 +113,7 @@ class _QuestionState extends State<Question> {
                           );
                         },
                         onSelected: (String selected) {
-                          debugPrint(selected);
+                          widget.onAnswersChanged([selected]);
                         }
                       ) :
                       CheckboxGroup(
@@ -112,9 +125,19 @@ class _QuestionState extends State<Question> {
                           );
                         },
                         onSelected: (List<String> checked) {
-                          debugPrint(checked.toString());
+                          widget.onAnswersChanged(checked);
                         }
                       )
+                  ),
+                ),
+                ButtonTheme.bar(
+                  child: ButtonBar(
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text('SUBMIT'),
+                        onPressed: () {},
+                      ),
+                    ],
                   ),
                 ),
               ]

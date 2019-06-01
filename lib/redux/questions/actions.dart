@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 ThunkAction<AppState> loadQuestionsAction(Reddit reddit, String subredditName) {
   return (Store<AppState> store) async {
     var latestQuestionsRaw =
-        await reddit.subreddit(subredditName).stream.submissions(limit: 10, pauseAfter: 1)
+        await reddit.subreddit(subredditName).stream.submissions(limit: 5, pauseAfter: 1)
           .takeWhile((submission) => submission != null)
           .toList();
 
@@ -37,4 +37,13 @@ class QuestionsLoadedAction {
   List<QuestionModel> questions;
 
   QuestionsLoadedAction(this.questions);
+}
+
+class ClearQuestionsAction {}
+
+class AnswersChangedAction {
+  int index;
+  List<String> answers;
+
+  AnswersChangedAction(this.index, this.answers);
 }

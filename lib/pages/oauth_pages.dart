@@ -52,6 +52,7 @@ class _RedditOAuthLauncherPageState extends State<RedditOAuthLauncherPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text('Launching Reddit authorization...'),
+            SizedBox(height: 5.0),
             CircularProgressIndicator(),
           ],
         ),
@@ -98,6 +99,7 @@ class RedditOAuthRedirectPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text('Logging you in...'),
+              SizedBox(height: 5.0),
               CircularProgressIndicator()
             ],
           );
