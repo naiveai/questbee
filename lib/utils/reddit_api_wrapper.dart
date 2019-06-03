@@ -6,8 +6,8 @@ class RedditAPIWrapper {
   Reddit client;
 
   Reddit initializeWithoutCredentials() {
-    client = Reddit.createWebFlowInstance(
-      clientId: redditConfig.clientId, clientSecret: '',
+    client = Reddit.createInstalledFlowInstance(
+      clientId: redditConfig.clientId,
       userAgent: redditConfig.userAgent,
       redirectUri: redditConfig.redirectUri,
     );

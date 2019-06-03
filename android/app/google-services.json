@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "705454866609",
+    "firebase_url": "https://questbee-d85f9.firebaseio.com",
+    "project_id": "questbee-d85f9",
+    "storage_bucket": "questbee-d85f9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:705454866609:android:7443bbfca5e68653",
+        "android_client_info": {
+          "package_name": "com.eshan.questbee"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "705454866609-lh23t5bcojjk542e1ce2meja2vapri79.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eshan.questbee",
+            "certificate_hash": "87da9fbf1531d3fbd9ee4d8a2f4db46e23a13252"
+          }
+        },
+        {
+          "client_id": "705454866609-vb8cj6e026j1njl2gi9gm64bg7camvdl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJjzSBaCSG8mG0QFZ5u21EvITnTFEcZCc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "705454866609-vb8cj6e026j1njl2gi9gm64bg7camvdl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

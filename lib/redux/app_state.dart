@@ -23,4 +23,22 @@ class AppState {
       questionsState: QuestionsState.initialState(),
     );
   }
+
+  static AppState fromJson(dynamic json) {
+    if (json != null) {
+      return AppState(
+        redditState: RedditState.fromJson(json['redditState']),
+        channelsState: ChannelsState.initialState(),
+        questionsState: QuestionsState.initialState(),
+      );
+    }
+
+    return null;
+  }
+
+  Map toJson() {
+    return {
+      'redditState': redditState.toJson(),
+    };
+  }
 }

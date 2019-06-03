@@ -34,11 +34,21 @@ ThunkAction<AppState> authenticateWithCodeAction(Reddit reddit, String code, Com
   };
 }
 
-ThunkAction<AppState> signedInAction() {
+ThunkAction<AppState> signedInAction(Reddit reddit) {
   return (Store<AppState> store) {
+    store.dispatch(
+        StoreCredentialsAction(
+            reddit.auth.credentials.toJson()));
+
     store.dispatch(NavigateToAction.pushNamedAndRemoveUntil(
       ChannelsPage.route,
       (_) => false,
     ));
   };
+}
+
+class StoreCredentialsAction {
+  String credentials;
+
+  StoreCredentialsAction(this.credentials);
 }

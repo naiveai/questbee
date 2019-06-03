@@ -249,6 +249,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.0"
+  redux_persist:
+    dependency: "direct main"
+    description:
+      name: redux_persist
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.8.2"
   redux_thunk:
     dependency: "direct main"
     description:

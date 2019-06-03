@@ -91,7 +91,7 @@ class RedditOAuthRedirectPage extends StatelessWidget {
               authenticateWithCodeAction(client, code, authCompleter));
 
           authCompleter.future.then((_) {
-            store.dispatch(signedInAction());
+            store.dispatch(signedInAction(client));
           });
         },
         builder: (context, store) {
