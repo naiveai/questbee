@@ -5,6 +5,7 @@ import 'package:flutter_redux/flutter_redux.dart';
 import 'package:flutter_redux_navigation/flutter_redux_navigation.dart';
 
 import 'package:questbee/redux/app_state.dart';
+import 'package:questbee/redux/reddit_auth/actions.dart';
 
 import 'package:questbee/utils/reddit_api_wrapper.dart';
 import 'package:provider/provider.dart';
@@ -37,16 +38,45 @@ class App extends StatelessWidget {
           ),
           initialRoute: '/',
           routes: {
-            '/': (context) => LoginPage(),
+            '/': (context) {
+              String credentials = store.state.redditState.credentials;
+
+              if (credentials != null) {
+                return SplashScreen(credentials);
+              } else {
+                return LoginPage();
+              }
+            },
             LoginPage.route: (context) => LoginPage(),
             ChannelsPage.route: (context) => ChannelsPage(),
             RedditOAuthLauncherPage.route: (context) =>
                 RedditOAuthLauncherPage(),
             RedditOAuthRedirectPage.route: (context) =>
                 RedditOAuthRedirectPage(),
-            QuestionsPage.route: (context) => QuestionsPage(),
-          },
-        ),
+            QuestionsPage.route: (context) => QuestionsPage(), },),),
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  SplashScreen(this.credentials);
+
+  final String credentials;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: StoreBuilder<AppState>(
+        onInitialBuild: (store) {
+          var wrapper = Provider.of<RedditAPIWrapper>(context);
+
+          wrapper.initializeWithCredentials(credentials)
+            .then((_) => store.dispatch(signedInAction(wrapper.client)))
+            .catchError((_) => store.dispatch(NavigateToAction.replace(
+              LoginPage.route
+            )));
+        },
+        builder: (_, __) => Container(),
       ),
     );
   }
