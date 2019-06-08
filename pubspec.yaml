@@ -38,6 +38,7 @@ dependencies:
   dio: ^2.1.6
   cached_network_image: ^0.8.0
   after_layout: ^1.0.7
+  pull_to_refresh: ^1.4.3
 
 dev_dependencies:
   flutter_test:

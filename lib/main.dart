@@ -24,19 +24,18 @@ void main() async {
   final persistor = Persistor<AppState>(
     storage: SecureStorage(FlutterSecureStorage()),
     serializer: JsonSerializer<AppState>(AppState.fromJson),
+    throttleDuration: Duration(seconds: 2),
   );
-
-  final possibleInitialState = await persistor.load();
-
-  if (possibleInitialState != null) {
-    debugPrint(possibleInitialState.redditState.credentials);
-  }
 
   // Create the store
   final store = Store<AppState>(
     rootReducer,
-    initialState: possibleInitialState ?? AppState.initialState(),
+    initialState: await persistor.load(),
     middleware: [
+      (store, action, next) {
+        debugPrint(action.runtimeType.toString());
+        next(action);
+      },
       thunkMiddleware,
       NavigationMiddleware<AppState>(),
       persistor.createMiddleware(),
@@ -57,6 +56,8 @@ void main() async {
     debugPrint("Firebase Messaging token: $token");
   });
 
+  _firebaseMessaging.requestNotificationPermissions();
+
   _firebaseMessaging.configure(
     onMessage: (Map<String, dynamic> message) {
       store.dispatch(notificationOnMessage(message));
@@ -68,8 +69,6 @@ void main() async {
       store.dispatch(notificationOnLaunch(message));
     },
   );
-
-  _firebaseMessaging.requestNotificationPermissions();
 
   runApp(App(store: store));
 }

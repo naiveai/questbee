@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:questbee/utils/reddit_api_wrapper.dart';
 
 import 'package:questbee/redux/channels/actions.dart';
+import 'package:questbee/redux/preferences/actions.dart';
 
 import 'package:questbee/models/channels.dart';
 
@@ -24,6 +25,7 @@ class ChannelsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Channels')),
       body: StoreConnector<AppState, _ChannelViewModel>(
+        distinct: true,
         converter: _ChannelViewModel.fromStore,
         onInit: (store) {
           store.dispatch(loadChannels(reddit));
@@ -35,7 +37,11 @@ class ChannelsPage extends StatelessWidget {
 
           return ChannelList(
             channels: vm.channels,
-            onTap: vm.onChannelTap,
+            actionBuilder: (BuildContext context, ChannelModel channel) =>
+              Switch(
+                value: vm.subscribedChannels.contains(channel),
+                onChanged: (value) => vm.onChannelTap(channel, !value),
+              )
           );
         },
       ),
@@ -44,24 +50,41 @@ class ChannelsPage extends StatelessWidget {
 }
 
 class _ChannelViewModel {
-  _ChannelViewModel({this.channels, this.onChannelTap});
+  _ChannelViewModel({this.channels, this.onChannelTap, this.subscribedChannels});
 
   final List<ChannelModel> channels;
-  final Function(ChannelModel) onChannelTap;
+  final List<ChannelModel> subscribedChannels;
+  final Function onChannelTap;
 
   static _ChannelViewModel fromStore(Store<AppState> store) {
     return _ChannelViewModel(
       channels: store.state.channelsState.channels,
-      onChannelTap: (channel) => store.dispatch(openChannelQuestions(channel)),
+      subscribedChannels: store.state.preferencesState.subscribedChannels,
+      onChannelTap: (channel, inSubscribed) {
+        if (inSubscribed) {
+          store.dispatch(UnsubscribedFromChannelAction(channel));
+        } else {
+          store.dispatch(SubscribedToChannelAction(channel));
+        }
+      },
     );
+  }
+
+  bool operator ==(other) {
+    return (other is _ChannelViewModel && other.channels == channels &&
+        other.subscribedChannels == subscribedChannels);
+  }
+
+  int get hashCode {
+    return channels.hashCode ^ subscribedChannels.hashCode;
   }
 }
 
 class ChannelList extends StatelessWidget {
-  ChannelList({Key key, this.channels, this.onTap}) : super(key: key);
+  ChannelList({Key key, this.channels, this.actionBuilder}) : super(key: key);
 
   final List<ChannelModel> channels;
-  final Function(ChannelModel) onTap;
+  final Function(BuildContext, ChannelModel) actionBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +101,7 @@ class ChannelList extends StatelessWidget {
               imageUrl: currentChannel.iconImage.toString(),
             ),
             title: Text(currentChannel.humanName),
-            onTap: () => onTap(currentChannel),
+            trailing: actionBuilder(context, currentChannel),
           ),
         );
       },

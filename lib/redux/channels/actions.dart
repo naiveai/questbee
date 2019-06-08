@@ -39,12 +39,3 @@ class ChannelsLoadedAction {
 
   List<ChannelModel> channels;
 }
-
-ThunkAction<AppState> openChannelQuestions(ChannelModel channel) {
-  return (Store<AppState> store) {
-    store.dispatch(NavigateToAction.push(
-      QuestionsPage.route,
-      arguments: {'channel': channel}
-    ));
-  };
-}

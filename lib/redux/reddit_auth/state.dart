@@ -11,6 +11,8 @@ class RedditState {
   }
 
   static RedditState fromJson(dynamic json) {
+    if (json == null) { return RedditState.initialState(); }
+
     return RedditState(
       credentials: json['credentials'],
     );

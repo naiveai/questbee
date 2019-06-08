@@ -53,7 +53,10 @@ class App extends StatelessWidget {
                 RedditOAuthLauncherPage(),
             RedditOAuthRedirectPage.route: (context) =>
                 RedditOAuthRedirectPage(),
-            QuestionsPage.route: (context) => QuestionsPage(), },),),
+            QuestionsPage.route: (context) => QuestionsPage(),
+          },
+        ),
+      ),
     );
   }
 }
@@ -70,11 +73,11 @@ class SplashScreen extends StatelessWidget {
         onInitialBuild: (store) {
           var wrapper = Provider.of<RedditAPIWrapper>(context);
 
-          wrapper.initializeWithCredentials(credentials)
+          wrapper
+            .initializeWithCredentials(credentials)
             .then((_) => store.dispatch(signedInAction(wrapper.client)))
-            .catchError((_) => store.dispatch(NavigateToAction.replace(
-              LoginPage.route
-            )));
+            .catchError((_) =>
+                store.dispatch(NavigateToAction.replace(LoginPage.route)));
         },
         builder: (_, __) => Container(),
       ),

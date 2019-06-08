@@ -9,8 +9,11 @@ import 'package:redux_thunk/redux_thunk.dart';
 
 import 'package:questbee/redux/app_state.dart';
 
-import 'package:questbee/pages/channels_page.dart';
+import 'package:questbee/pages/questions_page.dart';
 import 'package:questbee/pages/oauth_pages.dart';
+
+
+import 'package:flutter/foundation.dart';
 
 ThunkAction<AppState> startUserSignInAction(Reddit reddit) {
   return (Store<AppState> store) {
@@ -41,7 +44,7 @@ ThunkAction<AppState> signedInAction(Reddit reddit) {
             reddit.auth.credentials.toJson()));
 
     store.dispatch(NavigateToAction.pushNamedAndRemoveUntil(
-      ChannelsPage.route,
+      QuestionsPage.route,
       (_) => false,
     ));
   };

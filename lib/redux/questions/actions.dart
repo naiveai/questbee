@@ -6,15 +6,24 @@ import 'package:redux_thunk/redux_thunk.dart';
 
 import 'package:questbee/redux/app_state.dart';
 
+import 'package:questbee/models/channels.dart';
 import 'package:questbee/models/questions.dart';
 
 import 'package:flutter/foundation.dart';
 
-ThunkAction<AppState> loadQuestionsAction(Reddit reddit, String subredditName) {
+ThunkAction<AppState> loadQuestionsAction(Reddit reddit, List<ChannelModel> channels) {
   return (Store<AppState> store) async {
+    debugPrint('loadQuestions');
+
+    if (channels.length == 0) {
+      store.dispatch(ClearQuestionsAction());
+      return;
+    }
+
+    var subredditNames = channels.map((c) => c.subredditName).toList();
+
     var latestQuestionsRaw =
-        await reddit.subreddit(subredditName).stream.submissions(limit: 5, pauseAfter: 1)
-          .takeWhile((submission) => submission != null)
+        await reddit.subreddit(subredditNames.join('+')).stream.submissions(limit: 3, pauseAfter: 1)
           .toList();
 
     store.dispatch(QuestionsLoadedAction(
