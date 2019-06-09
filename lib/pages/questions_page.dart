@@ -20,7 +20,10 @@ import 'package:questbee/pages/channels_page.dart';
 
 import 'package:grouped_buttons/grouped_buttons.dart';
 
-import 'package:draw/draw.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class QuestionsPage extends StatefulWidget {
   static final String route = '/questions';
@@ -31,6 +34,21 @@ class QuestionsPage extends StatefulWidget {
 }
 
 class _QuestionsPageState extends State<QuestionsPage> {
+  RefreshController _refreshController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _refreshController = RefreshController();
+  }
+
+  void dispose() {
+    _refreshController.dispose();
+
+    super.dispose();
+  }
+
   Widget _buildAppBar(BuildContext context, _QuestionsViewModel vm) {
     final reddit = Provider.of<RedditAPIWrapper>(context).client;
 
@@ -41,6 +59,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.assignment),
+          tooltip: 'Subscribed channels',
           onPressed: () async {
             await Navigator.of(context).pushNamed(ChannelsPage.route);
 
@@ -83,12 +102,24 @@ class _QuestionsPageState extends State<QuestionsPage> {
               style: Theme.of(context).textTheme.caption,
               textAlign: TextAlign.start,
             ),
+            Divider(),
+          ],
+          footers: <Widget>[
+            ButtonTheme.bar(
+              child: ButtonBar(
+                children: <Widget>[
+                  FlatButton(
+                    child: Text('SUBMIT'),
+                    onPressed: () {
+                      vm.onSubmit(reddit, index);
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
           onAnswersChanged: (List<String> answers) {
             vm.onAnswersChanged(index, answers);
-          },
-          onSubmit: () {
-            vm.onSubmit(reddit, index);
           },
         );
       },
@@ -112,6 +143,10 @@ class _QuestionsPageState extends State<QuestionsPage> {
         store.dispatch(ClearQuestionsAction());
       },
       builder: (BuildContext context, _QuestionsViewModel vm) {
+        if (!vm.isFetching && _refreshController.isRefresh) {
+          _refreshController.refreshCompleted();
+        }
+
         if (vm.channels.length == 0) {
           return Scaffold(
             appBar: _buildAppBar(context, vm),
@@ -130,7 +165,13 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
         return Scaffold(
           appBar: _buildAppBar(context, vm),
-          body: _buildQuestionsList(context, vm),
+          body: SmartRefresher(
+            header: MaterialClassicHeader(),
+            enablePullDown: true,
+            controller: _refreshController,
+            onRefresh: () => vm.loadQuestions(reddit),
+            child: _buildQuestionsList(context, vm),
+          ),
         );
       },
     );
@@ -138,22 +179,23 @@ class _QuestionsPageState extends State<QuestionsPage> {
 }
 
 class _QuestionsViewModel {
-  _QuestionsViewModel({this.channels, this.loadQuestions, this.questions,
-    this.onAnswersChanged, this.onSubmit, this.clear});
+  _QuestionsViewModel({this.isFetching, this.channels, this.loadQuestions, this.questions,
+    this.onAnswersChanged, this.onSubmit});
 
+  final bool isFetching;
   final List<ChannelModel> channels;
   final List<QuestionModel> questions;
 
   final Function loadQuestions;
   final Function onAnswersChanged;
   final Function onSubmit;
-  final Function clear;
 
   static _QuestionsViewModel fromStore(Store<AppState> store) {
     return _QuestionsViewModel(
+      isFetching: store.state.questionsState.isFetching,
       channels: store.state.preferencesState.subscribedChannels,
       questions: store.state.questionsState.questions,
-      loadQuestions: (Reddit reddit) {
+      loadQuestions: (reddit) {
         if (store.state.preferencesState.subscribedChannels.length != 0) {
           store.dispatch(loadQuestionsAction(reddit,
                   store.state.preferencesState.subscribedChannels));
@@ -164,18 +206,21 @@ class _QuestionsViewModel {
       },
       onSubmit: (reddit, index) {
         store.dispatch(submitQuestionAction(reddit, index));
-      },
-      clear: () => store.dispatch(ClearQuestionsAction()),
+      }
     );
   }
 
   bool operator ==(other) {
-    return (other is _QuestionsViewModel && other.questions == questions &&
-        other.channels == channels);
+    return (
+      other is _QuestionsViewModel &&
+      other.isFetching == isFetching &&
+      other.questions == questions &&
+      other.channels == channels
+    );
   }
 
   int get hashCode {
-    return questions.hashCode ^ channels.hashCode;
+    return questions.hashCode ^ channels.hashCode ^ isFetching.hashCode;
   }
 }
 
@@ -183,15 +228,15 @@ class Question extends StatefulWidget {
   Question(
       {Key key,
       this.headers = const [],
+      this.footers = const [],
       @required this.question,
-      @required this.onAnswersChanged,
-      @required this.onSubmit})
+      @required this.onAnswersChanged})
       : super(key: key);
 
   final List<Widget> headers;
+  final List<Widget> footers;
   final QuestionModel question;
   final Function(List<String>) onAnswersChanged;
-  final Function() onSubmit;
 
   @override
   _QuestionState createState() => _QuestionState();
@@ -203,51 +248,94 @@ class _QuestionState extends State<Question> {
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 1.0,
       child: Padding(
         padding: EdgeInsets.all(15.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             ...widget.headers,
-            Divider(),
             for (final questionBlock in widget.question.questionBlocks)
-              if (questionBlock.type == "text/plain")
-                Text(questionBlock.value.replaceAll("\n", "\n\n"), style:
-                    Theme.of(context).textTheme.subhead),
+              QuestionBlockView(questionBlock: questionBlock),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: (widget.question.numberOfCorrectAnswers == 1
-                  ? RadioButtonGroup(
-                      labels: widget.question.answers,
-                      itemBuilder: (Radio rb, Text txt, int i) {
-                        return ListTile(
-                          leading: rb,
-                          title: txt,
-                        );
-                      },
-                      onSelected: (String selected) => widget.onAnswersChanged([selected]),
-                    )
+              child: (
+                widget.question.numberOfCorrectAnswers == 1 ?
+                  RadioButtonGroup(
+                    labels: widget.question.answers,
+                    itemBuilder: (Radio rb, Text txt, int i) {
+                      return RadioListTile(
+                        title: txt,
+                        value: rb.value,
+                        groupValue: rb.groupValue,
+                        onChanged: rb.onChanged,
+                      );
+                    },
+                    onSelected: (String selected) {
+                      setState(() {
+                        currentAnswers = [selected];
+                      });
+
+                      widget.onAnswersChanged([selected]);
+                    }
+                  )
                   : CheckboxGroup(
-                      labels: widget.question.answers,
-                      itemBuilder: (Checkbox cb, Text txt, int i) {
-                        return ListTile(leading: cb, title: txt);
-                      },
-                      onSelected: widget.onAnswersChanged,
-                    )),
-            ),
-            ButtonTheme.bar(
-              child: ButtonBar(
-                children: <Widget>[
-                  FlatButton(
-                    child: Text('SUBMIT'),
-                    // onPressed: widget.onSubmit,
-                  ),
-                ],
+                    labels: widget.question.answers,
+                    disabled: (() {
+                      if(currentAnswers.length ==
+                          widget.question.numberOfCorrectAnswers) {
+                        return List<String>.from(widget.question.answers
+                            .where((answer) =>
+                                !currentAnswers.contains(answer)));
+                      }
+                    })(),
+                    itemBuilder: (Checkbox cb, Text txt, int i) {
+                      return CheckboxListTile(
+                        title: txt,
+                        value: cb.value,
+                        onChanged: cb.onChanged,
+                        controlAffinity: ListTileControlAffinity.leading,
+                      );
+                    },
+                    onSelected: (List<String> selected) {
+                      setState(() {
+                        currentAnswers = selected;
+                      });
+
+                      widget.onAnswersChanged(selected);
+                    }
+                  )
               ),
             ),
+            ...widget.footers,
           ],
         ),
       ),
     );
+  }
+}
+
+class QuestionBlockView extends StatelessWidget {
+  QuestionBlockView({Key key, @required this.questionBlock}) : super(key: key);
+
+  final QuestionBlockModel questionBlock;
+
+  @override
+  Widget build(BuildContext context) {
+    if (questionBlock.type == "text/plain") {
+      final theme = Theme.of(context);
+
+      return MarkdownBody(
+        data: questionBlock.value.replaceAll("\n", "\n\n"),
+        styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
+          p: theme.textTheme.subhead,
+        ),
+        onTapLink: (url) async {
+          if (await canLaunch(url)) {
+            await launch(url);
+          }
+        },
+      );
+    }
   }
 }

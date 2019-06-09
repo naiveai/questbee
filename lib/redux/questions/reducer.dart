@@ -10,8 +10,15 @@ QuestionsState questionsReducer(QuestionsState state, dynamic action) {
     var newQuestions = action.questions.reversed.toList();
 
     return QuestionsState(
+      isFetching: false,
       questions: newQuestions,
       answers: List.filled(newQuestions.length, null, growable: true),
+    );
+  } else if (action is StartLoadingQuestionsAction) {
+    return QuestionsState(
+      isFetching: true,
+      questions: state.questions,
+      answers: state.answers,
     );
   } else if (action is AnswersChangedAction) {
     var newAnswers = state.answers;
@@ -19,6 +26,7 @@ QuestionsState questionsReducer(QuestionsState state, dynamic action) {
     newAnswers[action.index] = action.answers;
 
     return QuestionsState(
+      isFetching: false,
       questions: state.questions,
       answers: newAnswers,
     );

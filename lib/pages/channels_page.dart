@@ -35,13 +35,16 @@ class ChannelsPage extends StatelessWidget {
             return Center(child: CircularProgressIndicator());
           }
 
-          return ChannelList(
-            channels: vm.channels,
-            actionBuilder: (BuildContext context, ChannelModel channel) =>
-              Switch(
-                value: vm.subscribedChannels.contains(channel),
-                onChanged: (value) => vm.onChannelTap(channel, !value),
-              )
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: ChannelList(
+              channels: vm.channels,
+              actionBuilder: (BuildContext context, ChannelModel channel) =>
+                Checkbox(
+                  value: vm.subscribedChannels.contains(channel),
+                  onChanged: (value) => vm.onChannelTap(channel, !value),
+                )
+            ),
           );
         },
       ),
@@ -93,7 +96,8 @@ class ChannelList extends StatelessWidget {
       itemBuilder: (BuildContext context, int index) {
         var currentChannel = channels[index];
 
-        return Card(
+        return SizedBox(
+          height: 72.0,
           child: ListTile(
             leading: CachedNetworkImage(
               placeholder: (_, __) => CircularProgressIndicator(),

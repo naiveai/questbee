@@ -13,8 +13,6 @@ import 'package:flutter/foundation.dart';
 
 ThunkAction<AppState> loadQuestionsAction(Reddit reddit, List<ChannelModel> channels) {
   return (Store<AppState> store) async {
-    debugPrint('loadQuestions');
-
     if (channels.length == 0) {
       store.dispatch(ClearQuestionsAction());
       return;
@@ -22,8 +20,11 @@ ThunkAction<AppState> loadQuestionsAction(Reddit reddit, List<ChannelModel> chan
 
     var subredditNames = channels.map((c) => c.subredditName).toList();
 
+    store.dispatch(StartLoadingQuestionsAction());
+
     var latestQuestionsRaw =
-        await reddit.subreddit(subredditNames.join('+')).stream.submissions(limit: 3, pauseAfter: 1)
+        await reddit.subreddit(subredditNames.join('+')).stream.submissions(pauseAfter: 0)
+          .takeWhile((submission) => submission != null)
           .toList();
 
     store.dispatch(QuestionsLoadedAction(
@@ -42,6 +43,8 @@ ThunkAction<AppState> loadQuestionsAction(Reddit reddit, List<ChannelModel> chan
     ));
   };
 }
+
+class StartLoadingQuestionsAction {}
 
 class QuestionsLoadedAction {
   List<QuestionModel> questions;

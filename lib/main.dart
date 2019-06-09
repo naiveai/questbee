@@ -32,10 +32,6 @@ void main() async {
     rootReducer,
     initialState: await persistor.load(),
     middleware: [
-      (store, action, next) {
-        debugPrint(action.runtimeType.toString());
-        next(action);
-      },
       thunkMiddleware,
       NavigationMiddleware<AppState>(),
       persistor.createMiddleware(),
@@ -59,15 +55,9 @@ void main() async {
   _firebaseMessaging.requestNotificationPermissions();
 
   _firebaseMessaging.configure(
-    onMessage: (Map<String, dynamic> message) {
-      store.dispatch(notificationOnMessage(message));
-    },
-    onResume: (Map<String, dynamic> message) {
-      store.dispatch(notificationOnResume(message));
-    },
-    onLaunch: (Map<String, dynamic> message) {
-      store.dispatch(notificationOnLaunch(message));
-    },
+    onMessage: (message) { store.dispatch(notificationForeground(message)); },
+    onResume: (message) { store.dispatch(notificationBackground(message)); },
+    onLaunch: (message) { store.dispatch(notificationBackground(message)); },
   );
 
   runApp(App(store: store));
