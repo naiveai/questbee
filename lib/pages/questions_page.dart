@@ -276,7 +276,7 @@ class _QuestionState extends State<Question> {
                         currentAnswers = [selected];
                       });
 
-                      widget.onAnswersChanged([selected]);
+                      widget.onAnswersChanged(currentAnswers);
                     }
                   )
                   : CheckboxGroup(
@@ -302,7 +302,7 @@ class _QuestionState extends State<Question> {
                         currentAnswers = selected;
                       });
 
-                      widget.onAnswersChanged(selected);
+                      widget.onAnswersChanged(currentAnswers);
                     }
                   )
               ),

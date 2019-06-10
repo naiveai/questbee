@@ -9,9 +9,8 @@ import 'package:questbee/redux/app_state.dart';
 import 'package:questbee/models/channels.dart';
 import 'package:questbee/models/questions.dart';
 
-import 'package:flutter/foundation.dart';
-
-ThunkAction<AppState> loadQuestionsAction(Reddit reddit, List<ChannelModel> channels) {
+ThunkAction<AppState> loadQuestionsAction(
+    Reddit reddit, List<ChannelModel> channels) {
   return (Store<AppState> store) async {
     if (channels.length == 0) {
       store.dispatch(ClearQuestionsAction());
@@ -22,25 +21,25 @@ ThunkAction<AppState> loadQuestionsAction(Reddit reddit, List<ChannelModel> chan
 
     store.dispatch(StartLoadingQuestionsAction());
 
-    var latestQuestionsRaw =
-        await reddit.subreddit(subredditNames.join('+')).stream.submissions(pauseAfter: 0)
-          .takeWhile((submission) => submission != null)
-          .toList();
+    var latestQuestionsRaw = await reddit
+        .subreddit(subredditNames.join('+')).stream
+        .submissions(pauseAfter: 0)
+        .takeWhile((submission) => submission != null)
+        .toList();
 
-    store.dispatch(QuestionsLoadedAction(
-      latestQuestionsRaw.map((submission) {
-        var questionInfo = json.decode(submission.selftext);
+    store.dispatch(QuestionsLoadedAction(latestQuestionsRaw.map((submission) {
+      var questionInfo = json.decode(submission.selftext);
 
-        return QuestionModel(
-          submission: submission,
-          questionId: questionInfo['questionId'],
-          numberOfCorrectAnswers: int.parse(questionInfo['numberOfCorrectAnswers']),
-          answers: List<String>.from(questionInfo['answers']),
-          questionBlocks: List<QuestionBlockModel>.from(questionInfo['question'].map((block) =>
-              QuestionBlockModel(block['type'], block['value']))),
-        );
-      }).toList()
-    ));
+      return QuestionModel(
+        submission: submission,
+        questionId: questionInfo['questionId'],
+        numberOfCorrectAnswers:
+            int.parse(questionInfo['numberOfCorrectAnswers']),
+        answers: List<String>.from(questionInfo['answers']),
+        questionBlocks: List<QuestionBlockModel>.from(questionInfo['question']
+            .map((block) => QuestionBlockModel(block['type'], block['value']))),
+      );
+    }).toList()));
   };
 }
 
@@ -63,7 +62,8 @@ class AnswersChangedAction {
 
 ThunkAction<AppState> submitQuestionAction(Reddit reddit, int questionIndex) {
   return (Store<AppState> store) async {
-    var submission = store.state.questionsState.questions[questionIndex].submission;
+    var submission =
+        store.state.questionsState.questions[questionIndex].submission;
     var answers = store.state.questionsState.answers[questionIndex];
 
     await submission.reply(json.encode({'answers': answers}));

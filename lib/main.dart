@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
@@ -16,10 +17,19 @@ import 'package:questbee/redux/notifications/actions.dart';
 import 'package:uni_links/uni_links.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:questbee/app.dart';
 
 void main() async {
+  final store = await initStore();
+  registerDeeplinking(store);
+  registerNotifications(store);
+
+  runApp(App(store: store));
+}
+
+Future<Store<AppState>> initStore() async {
   // Create persistence
   final persistor = Persistor<AppState>(
     storage: SecureStorage(FlutterSecureStorage()),
@@ -27,8 +37,7 @@ void main() async {
     throttleDuration: Duration(seconds: 2),
   );
 
-  // Create the store
-  final store = Store<AppState>(
+  return Store<AppState>(
     rootReducer,
     initialState: await persistor.load(),
     middleware: [
@@ -37,32 +46,55 @@ void main() async {
       persistor.createMiddleware(),
     ],
   );
+}
 
-  // Register deeplinking
+void registerDeeplinking(Store<AppState> store) {
   getUriLinksStream().listen((Uri uri) {
     store.dispatch(deepLinkRecievedAction(uri));
   }, onError: (err) {
     store.dispatch(DeepLinkErrorAction(err));
   });
+}
+
+void registerNotifications(Store<AppState> store) {
+  // Local notifications setup
+  final flutterLocalNotifications = FlutterLocalNotificationsPlugin();
+
+  flutterLocalNotifications.initialize(
+    InitializationSettings(
+      AndroidInitializationSettings('@mipmap/ic_launcher'),
+      IOSInitializationSettings(),
+    ),
+    onSelectNotification: (messageJson) {
+      store.dispatch(
+        notificationClicked(json.decode(messageJson)));
+    },
+  );
 
   // Register Firebase Messaging notifications
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  final firebaseMessaging = FirebaseMessaging();
 
-  _firebaseMessaging.getToken().then((String token) {
+  firebaseMessaging.getToken().then((String token) {
     debugPrint("Firebase Messaging token: $token");
   });
 
-  _firebaseMessaging.requestNotificationPermissions();
+  firebaseMessaging.requestNotificationPermissions();
 
-  _firebaseMessaging.configure(
-    onMessage: (message) { store.dispatch(notificationForeground(message)); },
-    onResume: (message) { store.dispatch(notificationBackground(message)); },
-    onLaunch: (message) { store.dispatch(notificationBackground(message)); },
+  firebaseMessaging.configure(
+    onMessage: (message) {
+      store.dispatch(
+          notificationForeground(message, flutterLocalNotifications));
+    },
+    onResume: (message) {
+      store.dispatch(
+        notificationClicked(message));
+    },
+    onLaunch: (message) {
+      store.dispatch(
+        notificationClicked(message));
+    },
   );
-
-  runApp(App(store: store));
 }
-
 class SecureStorage implements StorageEngine {
   final FlutterSecureStorage secureStorageInstance;
 
