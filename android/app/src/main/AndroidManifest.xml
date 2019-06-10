@@ -6,7 +6,8 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="questbee"
+        android:label="QuestBee"
+        android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher">
         <activity
