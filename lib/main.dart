@@ -17,16 +17,23 @@ import 'package:questbee/redux/notifications/actions.dart';
 import 'package:uni_links/uni_links.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:questbee/app.dart';
 
 void main() async {
+  setupCrashlytics();
+
   final store = await initStore();
   registerDeeplinking(store);
   registerNotifications(store);
 
   runApp(App(store: store));
+}
+
+void setupCrashlytics() {
+  FlutterError.onError = Crashlytics.instance.onError;
 }
 
 Future<Store<AppState>> initStore() async {
