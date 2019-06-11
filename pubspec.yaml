@@ -35,8 +35,9 @@ dependencies:
   firebase_messaging: ^5.0.2
   flutter_local_notifications: ^0.7.1
 
-  # Crashlytics
+  firebase_analytics: ^3.0.2
   firebase_crashlytics: ^0.0.4
+  firebase_performance: ^0.3.0
 
   # Misc
   flutter_markdown: ^0.2.0

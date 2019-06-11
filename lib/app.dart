@@ -15,6 +15,9 @@ import 'package:questbee/pages/channels_page.dart';
 import 'package:questbee/pages/oauth_pages.dart';
 import 'package:questbee/pages/questions_page.dart';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+
 class App extends StatelessWidget {
   App({Key key, this.store}) : super(key: key);
 
@@ -28,6 +31,9 @@ class App extends StatelessWidget {
         builder: (context) => RedditAPIWrapper(),
         child: MaterialApp(
           navigatorKey: NavigatorHolder.navigatorKey,
+          navigatorObservers: [
+            FirebaseAnalyticsObserver(analytics: FirebaseAnalytics()),
+          ],
           theme: ThemeData(
             brightness: Brightness.light,
             primaryColor: Colors.yellow[700],
@@ -71,7 +77,7 @@ class SplashScreen extends StatelessWidget {
     return Scaffold(
       body: StoreBuilder<AppState>(
         onInitialBuild: (store) {
-          var wrapper = Provider.of<RedditAPIWrapper>(context);
+          final wrapper = Provider.of<RedditAPIWrapper>(context);
 
           wrapper
             .initializeWithCredentials(credentials)

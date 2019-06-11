@@ -48,6 +48,14 @@ Future<Store<AppState>> initStore() async {
     rootReducer,
     initialState: await persistor.load(),
     middleware: [
+      (Store<AppState> store, dynamic action, NextDispatcher next) {
+        String debugString = "Action: ${action.runtimeType}, State: ${store.state}";
+
+        debugPrint(debugString);
+        Crashlytics.instance.log(debugString);
+
+        next(action);
+      },
       thunkMiddleware,
       NavigationMiddleware<AppState>(),
       persistor.createMiddleware(),
