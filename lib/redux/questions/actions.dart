@@ -9,37 +9,56 @@ import 'package:questbee/redux/app_state.dart';
 import 'package:questbee/models/channels.dart';
 import 'package:questbee/models/questions.dart';
 
+import 'package:built_collection/built_collection.dart';
+
 ThunkAction<AppState> loadQuestionsAction(
-    Reddit reddit, List<ChannelModel> channels) {
+    Reddit reddit, List<ChannelModel> channels,
+    {bool isRefresh = false}) {
   return (Store<AppState> store) async {
     if (channels.length == 0) {
       store.dispatch(ClearQuestionsAction());
       return;
     }
 
-    var subredditNames = channels.map((c) => c.subredditName).toList();
+    final subredditNames = channels.map((c) => c.subredditName);
 
     store.dispatch(StartLoadingQuestionsAction());
 
-    var latestQuestionsRaw = await reddit
-        .subreddit(subredditNames.join('+')).stream
-        .submissions(pauseAfter: 0)
-        .takeWhile((submission) => submission != null)
-        .toList();
+    final questionsResponse =
+      await reddit.get("r/${subredditNames.join('+')}/new.json") as Map;
 
-    store.dispatch(QuestionsLoadedAction(latestQuestionsRaw.map((submission) {
-      var questionInfo = json.decode(submission.selftext);
+    if (isRefresh) {
+      store.dispatch(ClearQuestionsAction());
+    }
 
-      return QuestionModel(
-        submission: submission,
-        questionId: questionInfo['questionId'],
-        numberOfCorrectAnswers:
-            int.parse(questionInfo['numberOfCorrectAnswers']),
-        answers: List<String>.from(questionInfo['answers']),
-        questionBlocks: List<QuestionBlockModel>.from(questionInfo['question']
-            .map((block) => QuestionBlockModel(block['type'], block['value']))),
+    final questions = questionsResponse['listing'];
+    final continuationToken = questionsResponse['after'];
+
+    for (final questionSubmission in questions) {
+      final questionInfo = json.decode(questionSubmission.selftext);
+
+      final question = QuestionModel((b) => b
+        ..submissionId = questionSubmission.id
+        ..questionId = questionInfo['questionId']
+        ..channel.replace(channels.singleWhere((channel) =>
+            channel.subredditName == questionSubmission.subreddit.displayName))
+        ..numberOfCorrectAnswers = int.parse(questionInfo['numberOfCorrectAnswers'])
+        ..answers.replace(BuiltList<String>(questionInfo['answers']))
+        ..questionBlocks.replace(
+            BuiltList<QuestionBlockModel>(
+              questionInfo['question'].map(
+                (block) => QuestionBlockModel((b) => b
+                  ..type = block['type']
+                  ..value = block['value']
+                )
+              )
+            )
+          )
+        ..submittedAnswers.replace(BuiltList<String>())
       );
-    }).toList()));
+
+      store.dispatch(QuestionsLoadedAction([question]));
+    }
   };
 }
 
@@ -54,18 +73,29 @@ class QuestionsLoadedAction {
 class ClearQuestionsAction {}
 
 class AnswersChangedAction {
-  int index;
+  QuestionModel question;
   List<String> answers;
 
-  AnswersChangedAction(this.index, this.answers);
+  AnswersChangedAction(this.question, this.answers);
 }
 
-ThunkAction<AppState> submitQuestionAction(Reddit reddit, int questionIndex) {
+ThunkAction<AppState> submitQuestionAction(Reddit reddit, QuestionModel question) {
   return (Store<AppState> store) async {
-    var submission =
-        store.state.questionsState.questions[questionIndex].submission;
-    var answers = store.state.questionsState.answers[questionIndex];
+    var submission = question.submission;
+    var answers = store.state.questionsState.answers[question];
 
     await submission.reply(json.encode({'answers': answers}));
   };
+}
+
+class SubmittedQuestionAction {
+  QuestionModel question;
+
+  SubmittedQuestionAction(this.question);
+}
+
+class DismissQuestionAction {
+  QuestionModel question;
+
+  DismissQuestionAction(this.question);
 }

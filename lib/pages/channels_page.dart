@@ -15,6 +15,8 @@ import 'package:questbee/redux/preferences/actions.dart';
 
 import 'package:questbee/models/channels.dart';
 
+import 'package:built_collection/built_collection.dart';
+
 class ChannelsPage extends StatelessWidget {
   static final String route = '/channels';
 
@@ -55,8 +57,8 @@ class ChannelsPage extends StatelessWidget {
 class _ChannelViewModel {
   _ChannelViewModel({this.channels, this.onChannelTap, this.subscribedChannels});
 
-  final List<ChannelModel> channels;
-  final List<ChannelModel> subscribedChannels;
+  final BuiltList<ChannelModel> channels;
+  final BuiltList<ChannelModel> subscribedChannels;
   final Function onChannelTap;
 
   static _ChannelViewModel fromStore(Store<AppState> store) {
@@ -86,27 +88,25 @@ class _ChannelViewModel {
 class ChannelList extends StatelessWidget {
   ChannelList({Key key, this.channels, this.actionBuilder}) : super(key: key);
 
-  final List<ChannelModel> channels;
+  final BuiltList<ChannelModel> channels;
   final Function(BuildContext, ChannelModel) actionBuilder;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: channels.length,
+      itemExtent: 72.0,
       itemBuilder: (BuildContext context, int index) {
         var currentChannel = channels[index];
 
-        return SizedBox(
-          height: 72.0,
-          child: ListTile(
-            leading: CachedNetworkImage(
-              placeholder: (_, __) => CircularProgressIndicator(),
-              errorWidget: (_, __, error) => Icon(MdiIcons.imageBroken),
-              imageUrl: currentChannel.iconImage.toString(),
-            ),
-            title: Text(currentChannel.humanName),
-            trailing: actionBuilder(context, currentChannel),
+        return ListTile(
+          leading: CachedNetworkImage(
+            placeholder: (_, __) => CircularProgressIndicator(),
+            errorWidget: (_, __, error) => Icon(MdiIcons.imageBroken),
+            imageUrl: currentChannel.iconImage.toString(),
           ),
+          title: Text(currentChannel.humanName),
+          trailing: actionBuilder(context, currentChannel),
         );
       },
     );

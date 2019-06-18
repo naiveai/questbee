@@ -25,6 +25,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+import 'package:built_collection/built_collection.dart';
+
 class QuestionsPage extends StatefulWidget {
   static final String route = '/questions';
 
@@ -60,10 +62,9 @@ class _QuestionsPageState extends State<QuestionsPage> {
         IconButton(
           icon: Icon(Icons.assignment),
           tooltip: 'Subscribed channels',
-          onPressed: () async {
-            await Navigator.of(context).pushNamed(ChannelsPage.route);
-
-            vm.loadQuestions(reddit);
+          onPressed: () {
+            Navigator.of(context).pushNamed(ChannelsPage.route)
+              .then((_) => vm.loadQuestions(reddit));
           }
         ),
       ],
@@ -89,38 +90,44 @@ class _QuestionsPageState extends State<QuestionsPage> {
     return ListView.separated(
       itemCount: vm.questions.length,
       itemBuilder: (BuildContext context, int index) {
-        return Question(
-          question: vm.questions[index],
-          headers: <Widget>[
-            Text(
-              vm.channels
-                .singleWhere((channel) =>
-                    channel.subredditName ==
-                    vm.questions[index].submission.subreddit
-                        .displayName)
-                .humanName,
-              style: Theme.of(context).textTheme.caption,
-              textAlign: TextAlign.start,
-            ),
-            Divider(),
-          ],
-          footers: <Widget>[
-            ButtonTheme.bar(
-              child: ButtonBar(
-                children: <Widget>[
-                  FlatButton(
-                    child: Text('SUBMIT'),
-                    onPressed: () {
-                      vm.onSubmit(reddit, index);
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-          onAnswersChanged: (List<String> answers) {
-            vm.onAnswersChanged(index, answers);
+        final question = vm.questions[index];
+
+        return Dismissible(
+          key: Key(question.questionId),
+          onDismissed: (_) {
+            vm.onDismissQuestion(question);
+
+            Scaffold.of(context)
+                .showSnackBar(SnackBar(content: Text("Question dismissed")));
           },
+          child: Question(
+            question: question,
+            headers: <Widget>[
+              Text(
+                question.channel.humanName,
+                style: Theme.of(context).textTheme.caption,
+                textAlign: TextAlign.start,
+              ),
+              Divider(),
+            ],
+            footers: <Widget>[
+              ButtonTheme.bar(
+                child: ButtonBar(
+                  children: <Widget>[
+                    FlatButton(
+                      child: Text('SUBMIT'),
+                      onPressed: () {
+                        vm.onSubmit(reddit, question);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            onAnswersChanged: (List<String> answers) {
+              vm.onAnswersChanged(question, answers);
+            },
+          ),
         );
       },
       separatorBuilder: (BuildContext context, int index) {
@@ -169,7 +176,9 @@ class _QuestionsPageState extends State<QuestionsPage> {
             header: MaterialClassicHeader(),
             enablePullDown: true,
             controller: _refreshController,
-            onRefresh: () => vm.loadQuestions(reddit),
+            onRefresh: () {
+              vm.loadQuestions(reddit, isRefresh: true);
+            },
             child: _buildQuestionsList(context, vm),
           ),
         );
@@ -179,34 +188,45 @@ class _QuestionsPageState extends State<QuestionsPage> {
 }
 
 class _QuestionsViewModel {
-  _QuestionsViewModel({this.isFetching, this.channels, this.loadQuestions, this.questions,
-    this.onAnswersChanged, this.onSubmit});
+  _QuestionsViewModel({
+    this.isFetching, this.channels, this.loadQuestions, this.questions,
+    this.onAnswersChanged, this.onSubmit, this.onDismissQuestion,
+    this.clearQuestions
+  });
 
   final bool isFetching;
-  final List<ChannelModel> channels;
-  final List<QuestionModel> questions;
+  final BuiltList<ChannelModel> channels;
+  final BuiltList<QuestionModel> questions;
 
   final Function loadQuestions;
   final Function onAnswersChanged;
   final Function onSubmit;
+  final Function onDismissQuestion;
+  final Function clearQuestions;
 
   static _QuestionsViewModel fromStore(Store<AppState> store) {
     return _QuestionsViewModel(
       isFetching: store.state.questionsState.isFetching,
       channels: store.state.preferencesState.subscribedChannels,
       questions: store.state.questionsState.questions,
-      loadQuestions: (reddit) {
-        if (store.state.preferencesState.subscribedChannels.length != 0) {
-          store.dispatch(loadQuestionsAction(reddit,
-                  store.state.preferencesState.subscribedChannels));
-        }
+      loadQuestions: (reddit, {bool isRefresh = false}) {
+        store.dispatch(
+          loadQuestionsAction(reddit,
+            store.state.preferencesState.subscribedChannels.toList(),
+            isRefresh: isRefresh));
       },
-      onAnswersChanged: (index, answers) {
-        store.dispatch(AnswersChangedAction(index, answers));
+      onAnswersChanged: (question, answers) {
+        store.dispatch(AnswersChangedAction(question, answers));
       },
-      onSubmit: (reddit, index) {
-        store.dispatch(submitQuestionAction(reddit, index));
-      }
+      onSubmit: (reddit, question) {
+        store.dispatch(submitQuestionAction(reddit, question));
+      },
+      onDismissQuestion: (question) {
+        store.dispatch(DismissQuestionAction(question));
+      },
+      clearQuestions: () {
+        store.dispatch(ClearQuestionsAction());
+      },
     );
   }
 
@@ -262,7 +282,7 @@ class _QuestionState extends State<Question> {
               child: (
                 widget.question.numberOfCorrectAnswers == 1 ?
                   RadioButtonGroup(
-                    labels: widget.question.answers,
+                    labels: widget.question.answers.toList(),
                     itemBuilder: (Radio rb, Text txt, int i) {
                       return RadioListTile(
                         title: txt,
@@ -280,7 +300,7 @@ class _QuestionState extends State<Question> {
                     }
                   )
                   : CheckboxGroup(
-                    labels: widget.question.answers,
+                    labels: widget.question.answers.toList(),
                     disabled: (() {
                       if(currentAnswers.length ==
                           widget.question.numberOfCorrectAnswers) {

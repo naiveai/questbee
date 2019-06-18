@@ -1,32 +1,21 @@
-import 'package:flutter/foundation.dart';
-
 import 'package:questbee/models/channels.dart';
 
-@immutable
-class PreferencesState {
-  PreferencesState({this.subscribedChannels});
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:built_collection/built_collection.dart';
 
-  final List<ChannelModel> subscribedChannels;
+part 'state.g.dart';
+
+abstract class PreferencesState implements Built<PreferencesState, PreferencesStateBuilder> {
+  static Serializer<PreferencesState> get serializer => _$preferencesStateSerializer;
+
+  BuiltList<ChannelModel> get subscribedChannels;
 
   factory PreferencesState.initialState() {
-    return PreferencesState(
-      subscribedChannels: [],
-    );
+    return PreferencesState((b) => b
+      .subscribedChannels.replace(BuiltList<ChannelModel>()));
   }
 
-  static PreferencesState fromJson(dynamic json) {
-    if (json == null) { return PreferencesState.initialState(); }
-
-    return PreferencesState(
-      subscribedChannels:
-          List<ChannelModel>.from(
-              json['subscribedChannels'].map(ChannelModel.fromJson).toList()),
-    );
-  }
-
-  Map toJson() {
-    return {
-      'subscribedChannels': subscribedChannels.map((c) => c.toJson()).toList(),
-    };
-  }
+  PreferencesState._();
+  factory PreferencesState([void Function(PreferencesStateBuilder) updates]) = _$PreferencesState;
 }

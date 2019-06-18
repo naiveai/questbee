@@ -4,7 +4,7 @@ description: Questions to ponder and discuss.
 version: 0.0.1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
@@ -29,6 +29,8 @@ dependencies:
   flutter_redux: ^0.5.3
   flutter_redux_navigation: ^0.4.1
   redux_persist: ^0.8.2
+  redux_epics: ^0.10.6
+  rxdart: ^0.22.0
   provider: ^2.0.1
 
   # Notifications
@@ -38,6 +40,9 @@ dependencies:
   firebase_analytics: ^3.0.2
   firebase_crashlytics: ^0.0.4
   firebase_performance: ^0.3.0
+
+  # Immutable values
+  built_value: ^6.6.0
 
   # Misc
   flutter_markdown: ^0.2.0
@@ -49,6 +54,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  build_runner: ^1.5.2
+  built_value_generator: ^6.6.0
 
 flutter:
   uses-material-design: true

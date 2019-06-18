@@ -21,10 +21,10 @@ ThunkAction<AppState> loadChannels(Reddit reddit) {
     var channelFutures = channelSubbredditNames.map((String name) async {
       var channelSubreddit = await reddit.subreddit(name).populate();
 
-      return ChannelModel(
-        name,
-        channelSubreddit.title,
-        iconImage: channelSubreddit.iconImage,
+      return ChannelModel((b) => b
+        ..subredditName = name
+        ..humanName = channelSubreddit.title
+        ..iconImage = channelSubreddit.iconImage
       );
     });
 

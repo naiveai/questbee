@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
+import 'package:redux_epics/redux_epics.dart';
 import 'package:redux_persist/redux_persist.dart';
 import 'package:flutter_redux_navigation/flutter_redux_navigation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,13 +22,42 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:questbee/app.dart';
+import 'package:questbee/serializers.dart';
 
 void main() async {
   setupCrashlytics();
 
-  final store = await initStore();
-  registerDeeplinking(store);
-  registerNotifications(store);
+  // Create persistence
+  final persistor = Persistor<AppState>(
+    storage: SecureStorage(FlutterSecureStorage()),
+    serializer: BuiltValueSerializer(),
+    throttleDuration: Duration(seconds: 2),
+  );
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotifications = FlutterLocalNotificationsPlugin();
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+
+  final store =  Store<AppState>(
+    rootReducer,
+    initialState: await persistor.load() ?? AppState.initialState(),
+    middleware: [
+      thunkMiddleware,
+      (Store<AppState> store, dynamic action, NextDispatcher next) {
+        next(action);
+
+        String debugString = "Action: ${action.runtimeType}";
+
+        debugPrint(debugString);
+        Crashlytics.instance.log(debugString);
+      },
+      NavigationMiddleware<AppState>(),
+      persistor.createMiddleware(),
+      EpicMiddleware<AppState>(rootEpic(firebaseMessaging)),
+    ],
+  );
+
+  // registerDeeplinking(store);
+  registerNotifications(store, firebaseMessaging, flutterLocalNotifications);
 
   runApp(App(store: store));
 }
@@ -36,58 +66,10 @@ void setupCrashlytics() {
   FlutterError.onError = Crashlytics.instance.onError;
 }
 
-Future<Store<AppState>> initStore() async {
-  // Create persistence
-  final persistor = Persistor<AppState>(
-    storage: SecureStorage(FlutterSecureStorage()),
-    serializer: JsonSerializer<AppState>(AppState.fromJson),
-    throttleDuration: Duration(seconds: 2),
-  );
-
-  return Store<AppState>(
-    rootReducer,
-    initialState: await persistor.load(),
-    middleware: [
-      (Store<AppState> store, dynamic action, NextDispatcher next) {
-        String debugString = "Action: ${action.runtimeType}, State: ${store.state}";
-
-        debugPrint(debugString);
-        Crashlytics.instance.log(debugString);
-
-        next(action);
-      },
-      thunkMiddleware,
-      NavigationMiddleware<AppState>(),
-      persistor.createMiddleware(),
-    ],
-  );
-}
-
-void registerDeeplinking(Store<AppState> store) {
-  getUriLinksStream().listen((Uri uri) {
-    store.dispatch(deepLinkRecievedAction(uri));
-  }, onError: (err) {
-    store.dispatch(DeepLinkErrorAction(err));
-  });
-}
-
-void registerNotifications(Store<AppState> store) {
-  // Local notifications setup
-  final flutterLocalNotifications = FlutterLocalNotificationsPlugin();
-
-  flutterLocalNotifications.initialize(
-    InitializationSettings(
-      AndroidInitializationSettings('@mipmap/ic_launcher'),
-      IOSInitializationSettings(),
-    ),
-    onSelectNotification: (messageJson) {
-      store.dispatch(
-        notificationClicked(json.decode(messageJson)));
-    },
-  );
-
+void registerNotifications(Store<AppState> store,
+    FirebaseMessaging firebaseMessaging,
+    FlutterLocalNotificationsPlugin flutterLocalNotifications) {
   // Register Firebase Messaging notifications
-  final firebaseMessaging = FirebaseMessaging();
 
   firebaseMessaging.getToken().then((String token) {
     debugPrint("Firebase Messaging token: $token");
@@ -109,7 +91,38 @@ void registerNotifications(Store<AppState> store) {
         notificationClicked(message));
     },
   );
+
+  // Local notifications setup
+
+  flutterLocalNotifications.initialize(
+    InitializationSettings(
+      AndroidInitializationSettings('@mipmap/ic_launcher'),
+      IOSInitializationSettings(),
+    ),
+    onSelectNotification: (messageJson) {
+      store.dispatch(
+        notificationClicked(json.decode(messageJson)));
+    },
+  );
 }
+
+class BuiltValueSerializer implements StateSerializer<AppState> {
+  @override
+  AppState decode(Uint8List data) {
+    if (data == null) {
+      return null;
+    }
+
+    return serializers.deserialize(json.decode(String.fromCharCodes(data)));
+  }
+
+  @override
+  Uint8List encode(AppState state) {
+    return Uint8List.fromList(
+      (json.encode(serializers.serialize(state))).codeUnits);
+  }
+}
+
 class SecureStorage implements StorageEngine {
   final FlutterSecureStorage secureStorageInstance;
 

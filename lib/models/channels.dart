@@ -1,29 +1,18 @@
-class ChannelModel {
-  ChannelModel(this.subredditName, this.humanName, {this.iconImage});
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
 
-  final String subredditName;
-  final String humanName;
-  final Uri iconImage;
+part 'channels.g.dart';
 
-  static ChannelModel fromJson(dynamic json) {
-    return ChannelModel(
-      json['subredditName'],
-      json['humanName'],
-      iconImage: Uri.tryParse(json['iconImage']),
-    );
-  }
+abstract class ChannelModel implements Built<ChannelModel, ChannelModelBuilder> {
+  static Serializer<ChannelModel> get serializer => _$channelModelSerializer;
 
-  Map toJson() {
-    return {
-      'subredditName': subredditName,
-      'humanName': humanName,
-      'iconImage': iconImage.toString(),
-    };
-  }
+  String get subredditName;
+  String get humanName;
 
-  bool operator ==(o) {
-    return o is ChannelModel && o.subredditName == subredditName;
-  }
+  @BuiltValueField(compare: false)
+  @nullable
+  Uri get iconImage;
 
-  int get hashCode => subredditName.hashCode;
+  ChannelModel._();
+  factory ChannelModel([void Function(ChannelModelBuilder) updates]) = _$ChannelModel;
 }

@@ -10,14 +10,16 @@ import 'package:questbee/models/channels.dart';
 
 import 'package:questbee/redux/questions/actions.dart';
 
-class SubscribedToChannelAction {
+abstract class ChangeChannelSubscriptionAction {
   final ChannelModel channel;
 
-  SubscribedToChannelAction(this.channel);
+  ChangeChannelSubscriptionAction(this.channel);
 }
 
-class UnsubscribedFromChannelAction {
-  final ChannelModel channel;
+class SubscribedToChannelAction extends ChangeChannelSubscriptionAction {
+  SubscribedToChannelAction(channel) : super(channel);
+}
 
-  UnsubscribedFromChannelAction(this.channel);
+class UnsubscribedFromChannelAction extends ChangeChannelSubscriptionAction {
+  UnsubscribedFromChannelAction(channel) : super(channel);
 }

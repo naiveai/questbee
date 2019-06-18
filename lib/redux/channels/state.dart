@@ -2,13 +2,21 @@ import 'package:flutter/foundation.dart';
 
 import 'package:questbee/models/channels.dart';
 
-@immutable
-class ChannelsState {
-  ChannelsState({this.channels});
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:built_collection/built_collection.dart';
 
-  final List<ChannelModel> channels;
+part 'state.g.dart';
+
+abstract class ChannelsState implements Built<ChannelsState, ChannelsStateBuilder> {
+  static Serializer<ChannelsState> get serializer => _$channelsStateSerializer;
+
+  BuiltList<ChannelModel> get channels;
 
   factory ChannelsState.initialState() {
-    return ChannelsState(channels: []);
+    return ChannelsState((b) => b.channels.replace(BuiltList<ChannelModel>()));
   }
+
+  ChannelsState._();
+  factory ChannelsState([void Function(ChannelsStateBuilder) updates]) = _$ChannelsState;
 }

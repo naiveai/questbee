@@ -11,15 +11,15 @@ ThunkAction<AppState> notificationForeground(
     Map<String, dynamic> message,
     FlutterLocalNotificationsPlugin flutterLocalNotifications) {
   return (Store<AppState> store) {
-    print("onForeground: ${message}");
+    print("onForeground: $message");
 
     flutterLocalNotifications.show(
       // We need to pass in an integer id for this notification, and if we pass
       // in the same one as a previous notification that one will get hidden by
       // this one. Technically if we recieve two or more notifications in the
-      // same millisecond, this will mean only one of them will show, but that
+      // same microsecond, this will mean only one of them will show, but that
       // is vanishingly unlikely for our usecase.
-      DateTime.now().millisecondsSinceEpoch,
+      DateTime.now().microsecondsSinceEpoch,
       message['notification']['title'], '',
       NotificationDetails(
         AndroidNotificationDetails(
@@ -47,6 +47,6 @@ ThunkAction<AppState> notificationClicked(Map<String, dynamic> message) {
     // complicated behaviour is predicated on FCM, Flutter, and its plugins to
     // be updated furter. So this is simply a TODO.
 
-    print("onBackground: ${message}");
+    print("onBackground: $message");
   };
 }

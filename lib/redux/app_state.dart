@@ -5,44 +5,29 @@ import 'package:questbee/redux/channels/state.dart';
 import 'package:questbee/redux/questions/state.dart';
 import 'package:questbee/redux/preferences/state.dart';
 
-@immutable
-class AppState {
-  AppState({
-    this.redditState,
-    this.channelsState,
-    this.questionsState,
-    this.preferencesState,
-  });
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:built_collection/built_collection.dart';
 
-  final RedditState redditState;
-  final ChannelsState channelsState;
-  final QuestionsState questionsState;
-  final PreferencesState preferencesState;
+part 'app_state.g.dart';
+
+abstract class AppState implements Built<AppState, AppStateBuilder> {
+  static Serializer<AppState> get serializer => _$appStateSerializer;
+
+  RedditState get redditState;
+  ChannelsState get channelsState;
+  QuestionsState get questionsState;
+  PreferencesState get preferencesState;
 
   factory AppState.initialState() {
-    return AppState(
-      redditState: RedditState.initialState(),
-      channelsState: ChannelsState.initialState(),
-      questionsState: QuestionsState.initialState(),
-      preferencesState: PreferencesState.initialState(),
+    return AppState((b) => b
+      ..redditState.replace(RedditState.initialState())
+      ..channelsState.replace(ChannelsState.initialState())
+      ..questionsState.replace(QuestionsState.initialState())
+      ..preferencesState.replace(PreferencesState.initialState())
     );
   }
 
-  static AppState fromJson(dynamic json) {
-    if (json == null) { return AppState.initialState(); }
-
-    return AppState(
-      redditState: RedditState.fromJson(json['redditState']),
-      channelsState: ChannelsState.initialState(),
-      questionsState: QuestionsState.initialState(),
-      preferencesState: PreferencesState.fromJson(json['preferencesState']),
-    );
-  }
-
-  Map toJson() {
-    return {
-      'redditState': redditState.toJson(),
-      'preferencesState': preferencesState.toJson(),
-    };
-  }
+  AppState._();
+  factory AppState([void Function(AppStateBuilder) updates]) = _$AppState;
 }

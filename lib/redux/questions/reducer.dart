@@ -1,39 +1,41 @@
 import 'package:questbee/redux/questions/actions.dart';
 import 'package:questbee/redux/questions/state.dart';
+import 'package:questbee/models/questions.dart';
 
 import 'package:questbee/redux/preferences/actions.dart';
+
+import 'package:built_collection/built_collection.dart';
 
 var _initial = QuestionsState.initialState();
 
 QuestionsState questionsReducer(QuestionsState state, dynamic action) {
-  if (action is QuestionsLoadedAction) {
-    var newQuestions = action.questions.reversed.toList();
-
-    return QuestionsState(
-      isFetching: false,
-      questions: newQuestions,
-      answers: List.filled(newQuestions.length, null, growable: true),
-    );
-  } else if (action is StartLoadingQuestionsAction) {
-    return QuestionsState(
-      isFetching: true,
-      questions: state.questions,
-      answers: state.answers,
-    );
-  } else if (action is AnswersChangedAction) {
-    var newAnswers = state.answers;
-
-    newAnswers[action.index] = action.answers;
-
-    return QuestionsState(
-      isFetching: false,
-      questions: state.questions,
-      answers: newAnswers,
-    );
-  } else if (action is ClearQuestionsAction || action is
-      SubscribedToChannelAction || action is UnsubscribedFromChannelAction) {
-    return _initial;
+  switch(action.runtimeType) {
+    case QuestionsLoadedAction:
+      return state.rebuild((b) => b
+        ..isFetching = false
+        ..questions.addAll(action.questions)
+        ..answers.replace(BuiltMap<QuestionModel, BuiltList<String>>())
+      );
+    case StartLoadingQuestionsAction:
+      return state.rebuild((b) => b
+        .isFetching = true
+      );
+    case AnswersChangedAction:
+      return state.rebuild((b) => b
+        .answers[action.question] = BuiltList<String>(action.answers)
+      );
+    case ClearQuestionsAction:
+    case SubscribedToChannelAction:
+    case UnsubscribedFromChannelAction:
+      return _initial;
+    case SubmittedQuestionAction:
+      return state;
+    case DismissQuestionAction:
+      return state.rebuild((b) => b
+        ..questions.remove(action.question)
+        ..answers.remove(action.question)
+      );
+    default:
+      return state;
   }
-
-  return state;
 }

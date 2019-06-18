@@ -1,19 +1,36 @@
-import 'package:draw/draw.dart';
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
+import 'package:built_collection/built_collection.dart';
 
-class QuestionModel {
-  QuestionModel({this.submission, this.questionId, this.numberOfCorrectAnswers, this.answers,
-      this.questionBlocks});
+import 'package:questbee/models/channels.dart';
 
-  final Submission submission;
-  final String questionId;
-  final int numberOfCorrectAnswers;
-  final List<String> answers;
-  final List<QuestionBlockModel> questionBlocks;
+part 'questions.g.dart';
+
+abstract class QuestionModel implements Built<QuestionModel, QuestionModelBuilder> {
+  static Serializer<QuestionModel> get serializer => _$questionModelSerializer;
+
+  @BuiltValueField(compare: false)
+  String get submissionId;
+
+  ChannelModel get channel;
+  String get questionId;
+  int get numberOfCorrectAnswers;
+  BuiltList<String> get answers;
+  BuiltList<QuestionBlockModel> get questionBlocks;
+
+  @BuiltValueField(compare: false)
+  BuiltList<String> get submittedAnswers;
+
+  QuestionModel._();
+  factory QuestionModel([void Function(QuestionModelBuilder) updates]) = _$QuestionModel;
 }
 
-class QuestionBlockModel {
-  QuestionBlockModel(this.type, this.value);
+abstract class QuestionBlockModel implements Built<QuestionBlockModel, QuestionBlockModelBuilder> {
+  static Serializer<QuestionBlockModel> get serializer => _$questionBlockModelSerializer;
 
-  final String type;
-  final String value;
+  String get type;
+  String get value;
+
+  QuestionBlockModel._();
+  factory QuestionBlockModel([void Function(QuestionBlockModelBuilder) updates]) = _$QuestionBlockModel;
 }

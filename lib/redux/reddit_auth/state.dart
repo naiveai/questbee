@@ -1,26 +1,20 @@
 import 'package:flutter/foundation.dart';
 
-@immutable
-class RedditState {
-  RedditState({this.credentials});
+import 'package:built_value/built_value.dart';
+import 'package:built_value/serializer.dart';
 
-  final String credentials;
+part 'state.g.dart';
+
+abstract class RedditState implements Built<RedditState, RedditStateBuilder> {
+  static Serializer<RedditState> get serializer => _$redditStateSerializer;
+
+  @nullable
+  String get credentials;
 
   factory RedditState.initialState() {
     return RedditState();
   }
 
-  static RedditState fromJson(dynamic json) {
-    if (json == null) { return RedditState.initialState(); }
-
-    return RedditState(
-      credentials: json['credentials'],
-    );
-  }
-
-  dynamic toJson() {
-    return {
-      'credentials': credentials,
-    };
-  }
+  RedditState._();
+  factory RedditState([void Function(RedditStateBuilder) updates]) = _$RedditState;
 }
