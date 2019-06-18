@@ -81,8 +81,8 @@ class AnswersChangedAction {
 
 ThunkAction<AppState> submitQuestionAction(Reddit reddit, QuestionModel question) {
   return (Store<AppState> store) async {
-    var submission = question.submission;
-    var answers = store.state.questionsState.answers[question];
+    final submission = await reddit.submission(id: question.submissionId).populate();
+    final answers = store.state.questionsState.answers[question];
 
     await submission.reply(json.encode({'answers': answers}));
   };
