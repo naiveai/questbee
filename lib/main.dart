@@ -56,7 +56,6 @@ void main() async {
     ],
   );
 
-  // registerDeeplinking(store);
   registerNotifications(store, firebaseMessaging, flutterLocalNotifications);
 
   runApp(App(store: store));
