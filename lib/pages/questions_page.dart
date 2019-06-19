@@ -64,7 +64,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
           tooltip: 'Subscribed channels',
           onPressed: () {
             Navigator.of(context).pushNamed(ChannelsPage.route)
-              .then((_) => vm.loadQuestions(reddit));
+              .then((_) => vm.loadQuestions(reddit, isRefresh: true));
           }
         ),
       ],
@@ -92,42 +92,33 @@ class _QuestionsPageState extends State<QuestionsPage> {
       itemBuilder: (BuildContext context, int index) {
         final question = vm.questions[index];
 
-        return Dismissible(
-          key: Key(question.questionId),
-          onDismissed: (_) {
-            vm.onDismissQuestion(question);
-
-            Scaffold.of(context)
-                .showSnackBar(SnackBar(content: Text("Question dismissed")));
+        return Question(
+          question: question,
+          headers: <Widget>[
+            Text(
+              question.channel.humanName,
+              style: Theme.of(context).textTheme.caption,
+              textAlign: TextAlign.start,
+            ),
+            Divider(),
+          ],
+          footers: <Widget>[
+            ButtonTheme.bar(
+              child: ButtonBar(
+                children: <Widget>[
+                  FlatButton(
+                    child: Text('SUBMIT'),
+                    onPressed: () {
+                      vm.onSubmit(reddit, question);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onAnswersChanged: (List<String> answers) {
+            vm.onAnswersChanged(question, answers);
           },
-          child: Question(
-            question: question,
-            headers: <Widget>[
-              Text(
-                question.channel.humanName,
-                style: Theme.of(context).textTheme.caption,
-                textAlign: TextAlign.start,
-              ),
-              Divider(),
-            ],
-            footers: <Widget>[
-              ButtonTheme.bar(
-                child: ButtonBar(
-                  children: <Widget>[
-                    FlatButton(
-                      child: Text('SUBMIT'),
-                      onPressed: () {
-                        vm.onSubmit(reddit, question);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            onAnswersChanged: (List<String> answers) {
-              vm.onAnswersChanged(question, answers);
-            },
-          ),
         );
       },
       separatorBuilder: (BuildContext context, int index) {
@@ -190,8 +181,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
 class _QuestionsViewModel {
   _QuestionsViewModel({
     this.isFetching, this.channels, this.loadQuestions, this.questions,
-    this.onAnswersChanged, this.onSubmit, this.onDismissQuestion,
-    this.clearQuestions
+    this.onAnswersChanged, this.onSubmit, this.clearQuestions
   });
 
   final bool isFetching;
@@ -201,7 +191,6 @@ class _QuestionsViewModel {
   final Function loadQuestions;
   final Function onAnswersChanged;
   final Function onSubmit;
-  final Function onDismissQuestion;
   final Function clearQuestions;
 
   static _QuestionsViewModel fromStore(Store<AppState> store) {
@@ -220,9 +209,6 @@ class _QuestionsViewModel {
       },
       onSubmit: (reddit, question) {
         store.dispatch(submitQuestionAction(reddit, question));
-      },
-      onDismissQuestion: (question) {
-        store.dispatch(DismissQuestionAction(question));
       },
       clearQuestions: () {
         store.dispatch(ClearQuestionsAction());

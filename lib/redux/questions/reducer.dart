@@ -14,7 +14,6 @@ QuestionsState questionsReducer(QuestionsState state, dynamic action) {
       return state.rebuild((b) => b
         ..isFetching = false
         ..questions.addAll(action.questions)
-        ..answers.replace(BuiltMap<QuestionModel, BuiltList<String>>())
       );
     case StartLoadingQuestionsAction:
       return state.rebuild((b) => b
@@ -30,11 +29,6 @@ QuestionsState questionsReducer(QuestionsState state, dynamic action) {
       return _initial;
     case SubmittedQuestionAction:
       return state;
-    case DismissQuestionAction:
-      return state.rebuild((b) => b
-        ..questions.remove(action.question)
-        ..answers.remove(action.question)
-      );
     default:
       return state;
   }

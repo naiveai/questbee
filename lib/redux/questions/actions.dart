@@ -93,9 +93,3 @@ class SubmittedQuestionAction {
 
   SubmittedQuestionAction(this.question);
 }
-
-class DismissQuestionAction {
-  QuestionModel question;
-
-  DismissQuestionAction(this.question);
-}
