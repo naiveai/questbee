@@ -15,6 +15,16 @@ QuestionsState questionsReducer(QuestionsState state, dynamic action) {
         ..isFetching = false
         ..questions.addAll(action.questions)
       );
+    case SubmittedAnswersLoadedAction:
+      return state.rebuild((b) => b
+        ..submittedAnswers.replace(
+            BuiltMap<String, BuiltList<String>>(
+              action.submittedAnswers.map((key, value) {
+                return MapEntry(key, BuiltList<String>(value));
+              })
+            )
+          )
+        );
     case StartLoadingQuestionsAction:
       return state.rebuild((b) => b
         .isFetching = true

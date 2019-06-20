@@ -9,7 +9,7 @@ import 'package:questbee/redux/preferences/actions.dart';
 
 Epic<AppState> channelSubscriptionNotificationsEpic(FirebaseMessaging firebaseMessaging) {
   return (Stream actions, EpicStore<AppState> store) async* {
-    var bufferedSubscriptionActions = Observable(actions)
+    final bufferedSubscriptionActions = Observable(actions)
       .ofType(TypeToken<ChangeChannelSubscriptionAction>())
       .buffer(Observable.periodic(Duration(milliseconds: 750)))
       .where((subscriptionActions) => subscriptionActions.length != 0);

@@ -6,8 +6,11 @@ import 'package:questbee/redux/questions/reducer.dart';
 import 'package:questbee/redux/preferences/reducer.dart';
 import 'package:questbee/redux/notifications/epics.dart';
 import 'package:questbee/redux/deep_links/epics.dart';
+import 'package:questbee/redux/questions/epics.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 AppState rootReducer(AppState state, dynamic action) {
   return state.rebuild((b) => b
@@ -18,9 +21,13 @@ AppState rootReducer(AppState state, dynamic action) {
   );
 }
 
-rootEpic(FirebaseMessaging firebaseMessaging) {
+rootEpic(
+  FirebaseMessaging firebaseMessaging,
+  Firestore firestore,
+  FirebaseAuth auth) {
   return combineEpics(<Epic<AppState>>[
     channelSubscriptionNotificationsEpic(firebaseMessaging),
+    submittedAnswersEpic(firestore, auth),
     uriLinksEpic,
   ]);
 }

@@ -17,9 +17,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:questbee/utils/reddit_api_wrapper.dart';
 
-ThunkAction<AppState> startUserSignInAction(Reddit reddit) {
+ThunkAction<AppState> startUserSignInAction(RedditAPIWrapper redditWrapper) {
   return (Store<AppState> store) {
-    var authUrl = reddit.auth
+    final reddit = redditWrapper.initializeWithoutCredentials();
+
+    final authUrl = reddit.auth
       .url(redditConfig.permissionScopes, 'foobar')
       .replace(host: 'en.reddit.com')
       .toString();
@@ -35,13 +37,21 @@ ThunkAction<AppState> startUserSignInAction(Reddit reddit) {
 ThunkAction<AppState> authenticateAfterFlowAction(
     RedditAPIWrapper redditWrapper, FirebaseAuth auth, Map args, Completer completer) {
   return (Store<AppState> store) async {
-    await redditWrapper.initializeWithCredentials(json.encode({
+    final accessTokenStartTime =
+        DateTime.fromMillisecondsSinceEpoch(int.parse(args["accessTokenStartTime"]));
+
+    // We subtract 10 seconds to account for potential latency
+    // from when the token came back from the server.
+    final expirationDateTime =
+        accessTokenStartTime.add(
+          Duration(seconds: int.parse(args["expires_in"]) - 10));
+
+    await redditWrapper.initializeWithCredentials({
       "accessToken": args["access_token"],
       "refreshToken": args["refresh_token"],
       "scopes": redditConfig.permissionScopes,
-      "expiration":
-          DateTime.now().millisecondsSinceEpoch + int.parse(args["expires_in"])
-    }));
+      "expiration": expirationDateTime.millisecondsSinceEpoch,
+    });
 
     auth.signInWithCustomToken(token: args["firebaseToken"]);
 

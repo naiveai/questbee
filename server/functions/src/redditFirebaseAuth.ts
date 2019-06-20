@@ -24,6 +24,8 @@ export async function appRedditFirebaseAuthImpl(data: any, context: any) {
 
     let redditTokenResponse;
 
+    const accessTokenStartTime = (new Date).getTime();
+
     try {
         // TODO: Find a way to not do this manually.
 
@@ -78,6 +80,7 @@ export async function appRedditFirebaseAuthImpl(data: any, context: any) {
     return {
         redirect: functions.config().app.redirect + '?' + qs.stringify({
             ...redditTokenResponse.data,
+            accessTokenStartTime,
             state: data.state,
             firebaseToken: token,
         })

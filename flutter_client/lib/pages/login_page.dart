@@ -23,10 +23,10 @@ class LoginPage extends StatelessWidget {
               Text("QuestBee", style: Theme.of(context).textTheme.display2),
               StoreConnector<AppState, VoidCallback>(
                 converter: (store) => () {
-                  final reddit =
-                    Provider.of<RedditAPIWrapper>(context).initializeWithoutCredentials();
+                  final redditWrapper =
+                    Provider.of<RedditAPIWrapper>(context);
 
-                  store.dispatch(startUserSignInAction(reddit));
+                  store.dispatch(startUserSignInAction(redditWrapper));
                 },
                 builder: (context, callback) {
                   return SizedBox(

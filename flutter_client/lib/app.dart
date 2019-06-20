@@ -19,6 +19,9 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'dart:convert';
 
 class App extends StatelessWidget {
   App({Key key, this.store}) : super(key: key);
@@ -33,6 +36,7 @@ class App extends StatelessWidget {
         providers: [
           Provider<RedditAPIWrapper>.value(value: RedditAPIWrapper()),
           Provider<FirebaseAuth>.value(value: FirebaseAuth.instance),
+          Provider<Firestore>.value(value: Firestore.instance),
         ],
         child: MaterialApp(
           navigatorKey: NavigatorHolder.navigatorKey,
@@ -85,7 +89,7 @@ class SplashScreen extends StatelessWidget {
           final redditWrapper = Provider.of<RedditAPIWrapper>(context);
 
           redditWrapper
-            .initializeWithCredentials(credentials)
+            .initializeWithCredentials(json.decode(credentials))
             .then((_) => store.dispatch(signedInAction(redditWrapper.client)))
             .catchError((_) =>
                 store.dispatch(NavigateToAction.replace(LoginPage.route)));

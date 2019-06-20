@@ -14,12 +14,14 @@ abstract class QuestionsState implements Built<QuestionsState, QuestionsStateBui
   bool get isFetching;
   BuiltList<QuestionModel> get questions;
   BuiltMap<QuestionModel, BuiltList<String>> get answers;
+  BuiltMap<String, BuiltList<String>> get submittedAnswers;
 
   factory QuestionsState.initialState() {
     return QuestionsState((b) => b
       ..isFetching = false
       ..questions.replace(BuiltList<QuestionModel>())
       ..answers.replace(BuiltMap<QuestionModel, BuiltList<String>>())
+      ..submittedAnswers.replace(BuiltMap<String, BuiltList<String>>())
     );
   }
 

@@ -23,6 +23,10 @@ abstract class QuestionModel implements Built<QuestionModel, QuestionModelBuilde
 
   QuestionModel._();
   factory QuestionModel([void Function(QuestionModelBuilder) updates]) = _$QuestionModel;
+
+  String toString() {
+    return "QuestionModel($questionId, $submissionId, $answers)";
+  }
 }
 
 abstract class QuestionBlockModel implements Built<QuestionBlockModel, QuestionBlockModelBuilder> {

@@ -19,6 +19,10 @@ import 'package:uni_links/uni_links.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import 'package:questbee/app.dart';
@@ -45,14 +49,16 @@ void main() async {
       (Store<AppState> store, dynamic action, NextDispatcher next) {
         next(action);
 
-        String debugString = "Action: ${action.runtimeType}, State: ${store.state}";
+        String debugString = "Action: ${action.runtimeType}";
 
         debugPrint(debugString);
         Crashlytics.instance.log(debugString);
       },
       NavigationMiddleware<AppState>(),
       persistor.createMiddleware(),
-      EpicMiddleware<AppState>(rootEpic(firebaseMessaging)),
+      EpicMiddleware<AppState>(
+        rootEpic(firebaseMessaging, Firestore.instance, FirebaseAuth.instance)
+      ),
     ],
   );
 

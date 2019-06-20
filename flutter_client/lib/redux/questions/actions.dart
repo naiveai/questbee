@@ -23,6 +23,7 @@ ThunkAction<AppState> loadQuestionsAction(
     final subredditNames = channels.map((c) => c.subredditName);
 
     store.dispatch(StartLoadingQuestionsAction());
+    store.dispatch(StartLoadingSubmittedAnswersAction());
 
     final questionsResponse =
       await reddit.get("r/${subredditNames.join('+')}/new.json") as Map;
@@ -63,12 +64,21 @@ ThunkAction<AppState> loadQuestionsAction(
 }
 
 class StartLoadingQuestionsAction {}
+class StartLoadingSubmittedAnswersAction {}
 
 class QuestionsLoadedAction {
   List<QuestionModel> questions;
 
   QuestionsLoadedAction(this.questions);
 }
+
+class SubmittedAnswersLoadedAction {
+  Map<String, List<String>> submittedAnswers;
+
+  SubmittedAnswersLoadedAction(this.submittedAnswers);
+}
+
+class StopLoadingSubmittedAnswersAction {}
 
 class ClearQuestionsAction {}
 

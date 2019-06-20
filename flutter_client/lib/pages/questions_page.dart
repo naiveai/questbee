@@ -115,6 +115,8 @@ class _QuestionsPageState extends State<QuestionsPage> {
                 ],
               ),
             ),
+            Text(
+              "Submitted: ${vm.submittedAnswers[question.questionId]}"),
           ],
           onAnswersChanged: (List<String> answers) {
             vm.onAnswersChanged(question, answers);
@@ -138,7 +140,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
         vm.loadQuestions(reddit);
       },
       onDispose: (store) {
-        store.dispatch(ClearQuestionsAction());
+        store.dispatch(StopLoadingSubmittedAnswersAction());
       },
       builder: (BuildContext context, _QuestionsViewModel vm) {
         if (!vm.isFetching && _refreshController.isRefresh) {
@@ -180,13 +182,15 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
 class _QuestionsViewModel {
   _QuestionsViewModel({
-    this.isFetching, this.channels, this.loadQuestions, this.questions,
-    this.onAnswersChanged, this.onSubmit, this.clearQuestions
+    this.isFetching, this.channels, this.questions, this.submittedAnswers,
+    this.loadQuestions, this.onAnswersChanged,
+    this.onSubmit, this.clearQuestions
   });
 
   final bool isFetching;
   final BuiltList<ChannelModel> channels;
   final BuiltList<QuestionModel> questions;
+  final BuiltMap<String, BuiltList<String>> submittedAnswers;
 
   final Function loadQuestions;
   final Function onAnswersChanged;
@@ -198,6 +202,7 @@ class _QuestionsViewModel {
       isFetching: store.state.questionsState.isFetching,
       channels: store.state.preferencesState.subscribedChannels,
       questions: store.state.questionsState.questions,
+      submittedAnswers: store.state.questionsState.submittedAnswers,
       loadQuestions: (reddit, {bool isRefresh = false}) {
         store.dispatch(
           loadQuestionsAction(reddit,
@@ -221,12 +226,13 @@ class _QuestionsViewModel {
       other is _QuestionsViewModel &&
       other.isFetching == isFetching &&
       other.questions == questions &&
-      other.channels == channels
+      other.channels == channels &&
+      other.submittedAnswers == submittedAnswers
     );
   }
 
   int get hashCode {
-    return questions.hashCode ^ channels.hashCode ^ isFetching.hashCode;
+    return questions.hashCode ^ channels.hashCode ^ isFetching.hashCode ^ submittedAnswers.hashCode;
   }
 }
 

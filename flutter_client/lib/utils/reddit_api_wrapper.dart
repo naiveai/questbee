@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:draw/draw.dart';
 
 import 'package:questbee/reddit_config.dart' as redditConfig;
@@ -15,9 +16,12 @@ class RedditAPIWrapper {
     return client;
   }
 
-  Future<Reddit> initializeWithCredentials(String credentials) async {
+  Future<Reddit> initializeWithCredentials(Map credentials) async {
     client = await Reddit.restoreAuthenticatedInstance(
-      credentials,
+      json.encode({
+        ...credentials,
+        "tokenEndpoint": "https://www.reddit.com/api/v1/access_token",
+      }),
       clientId: redditConfig.clientId, clientSecret: '',
       userAgent: redditConfig.userAgent,
     );
