@@ -71,9 +71,7 @@ export async function appRedditFirebaseAuthImpl(data: any, context: any) {
         adminSdkInitialized = true;
     }
 
-    // Attach the username as a claim so Security Rules can later
-    // check based on it rather than the very long token itself.
-    const token = await admin.auth().createCustomToken(username, {username});
+    const token = await admin.auth().createCustomToken(username);
 
     console.log(`Token created for Reddit user ${username}: ${token}`);
 
