@@ -3,6 +3,7 @@ import 'package:questbee/pages/oauth_pages.dart';
 
 final clientId = "SlOSFuJWe_E7Cg";
 final redirectUri = Uri.parse("questbee:/${RedditOAuthRedirectPage.route}");
+final backendRedirectUri = Uri.parse("https://questbee-d85f9.web.app/redditAppRedirect");
 final permissionScopes = [
   "vote",
   "submit",

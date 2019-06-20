@@ -9,7 +9,7 @@ class RedditAPIWrapper {
     client = Reddit.createInstalledFlowInstance(
       clientId: redditConfig.clientId,
       userAgent: redditConfig.userAgent,
-      redirectUri: redditConfig.redirectUri,
+      redirectUri: redditConfig.backendRedirectUri,
     );
 
     return client;

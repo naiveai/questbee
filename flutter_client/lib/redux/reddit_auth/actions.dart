@@ -3,6 +3,7 @@ import 'package:questbee/reddit_config.dart' as redditConfig;
 import 'package:flutter_redux_navigation/flutter_redux_navigation.dart';
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:redux/redux.dart';
 import 'package:redux_thunk/redux_thunk.dart';
@@ -12,8 +13,9 @@ import 'package:questbee/redux/app_state.dart';
 import 'package:questbee/pages/questions_page.dart';
 import 'package:questbee/pages/oauth_pages.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:flutter/foundation.dart';
+import 'package:questbee/utils/reddit_api_wrapper.dart';
 
 ThunkAction<AppState> startUserSignInAction(Reddit reddit) {
   return (Store<AppState> store) {
@@ -22,16 +24,26 @@ ThunkAction<AppState> startUserSignInAction(Reddit reddit) {
       .replace(host: 'en.reddit.com')
       .toString();
 
-    store.dispatch(NavigateToAction.push(
+    store.dispatch(NavigateToAction.pushNamedAndRemoveUntil(
       RedditOAuthLauncherPage.route,
-      arguments: {'url': authUrl}
+      (_) => false,
+      arguments: {'url': authUrl},
     ));
   };
 }
 
-ThunkAction<AppState> authenticateWithCodeAction(Reddit reddit, String code, Completer completer) {
+ThunkAction<AppState> authenticateAfterFlowAction(
+    RedditAPIWrapper redditWrapper, FirebaseAuth auth, Map args, Completer completer) {
   return (Store<AppState> store) async {
-    await reddit.auth.authorize(code);
+    await redditWrapper.initializeWithCredentials(json.encode({
+      "accessToken": args["access_token"],
+      "refreshToken": args["refresh_token"],
+      "scopes": redditConfig.permissionScopes,
+      "expiration":
+          DateTime.now().millisecondsSinceEpoch + int.parse(args["expires_in"])
+    }));
+
+    auth.signInWithCustomToken(token: args["firebaseToken"]);
 
     completer.complete();
   };

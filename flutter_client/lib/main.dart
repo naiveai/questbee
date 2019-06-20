@@ -45,7 +45,7 @@ void main() async {
       (Store<AppState> store, dynamic action, NextDispatcher next) {
         next(action);
 
-        String debugString = "Action: ${action.runtimeType}";
+        String debugString = "Action: ${action.runtimeType}, State: ${store.state}";
 
         debugPrint(debugString);
         Crashlytics.instance.log(debugString);

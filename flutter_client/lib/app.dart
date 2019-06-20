@@ -18,6 +18,8 @@ import 'package:questbee/pages/questions_page.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_analytics/observer.dart';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 class App extends StatelessWidget {
   App({Key key, this.store}) : super(key: key);
 
@@ -27,8 +29,11 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return StoreProvider<AppState>(
       store: store,
-      child: Provider<RedditAPIWrapper>(
-        builder: (context) => RedditAPIWrapper(),
+      child: MultiProvider(
+        providers: [
+          Provider<RedditAPIWrapper>.value(value: RedditAPIWrapper()),
+          Provider<FirebaseAuth>.value(value: FirebaseAuth.instance),
+        ],
         child: MaterialApp(
           navigatorKey: NavigatorHolder.navigatorKey,
           navigatorObservers: [
@@ -77,11 +82,11 @@ class SplashScreen extends StatelessWidget {
     return Scaffold(
       body: StoreBuilder<AppState>(
         onInitialBuild: (store) {
-          final wrapper = Provider.of<RedditAPIWrapper>(context);
+          final redditWrapper = Provider.of<RedditAPIWrapper>(context);
 
-          wrapper
+          redditWrapper
             .initializeWithCredentials(credentials)
-            .then((_) => store.dispatch(signedInAction(wrapper.client)))
+            .then((_) => store.dispatch(signedInAction(redditWrapper.client)))
             .catchError((_) =>
                 store.dispatch(NavigateToAction.replace(LoginPage.route)));
         },

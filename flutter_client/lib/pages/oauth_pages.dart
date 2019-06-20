@@ -18,6 +18,8 @@ import 'package:questbee/pages/channels_page.dart';
 
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
+
 class RedditOAuthLauncherPage extends StatefulWidget {
   static final String route = '/reddit-oauth-launcher';
 
@@ -79,19 +81,20 @@ class RedditOAuthRedirectPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPermissionsAllowed(BuildContext context, String code) {
+  Widget _buildPermissionsAllowed(BuildContext context, Map args) {
     return Center(
       child: StoreBuilder<AppState>(
         onInitialBuild: (store) {
-          var client = Provider.of<RedditAPIWrapper>(context).client;
+          final redditWrapper = Provider.of<RedditAPIWrapper>(context);
+          final auth = Provider.of<FirebaseAuth>(context);
 
           final authCompleter = Completer();
 
           store.dispatch(
-              authenticateWithCodeAction(client, code, authCompleter));
+            authenticateAfterFlowAction(redditWrapper, auth, args, authCompleter));
 
           authCompleter.future.then((_) {
-            store.dispatch(signedInAction(client));
+            store.dispatch(signedInAction(redditWrapper.client));
           });
         },
         builder: (context, store) {
@@ -115,7 +118,7 @@ class RedditOAuthRedirectPage extends StatelessWidget {
     return Scaffold(
       body: args['error'] == 'access_denied'
           ? _buildPermissionsDenied()
-          : _buildPermissionsAllowed(context, args['code']),
+          : _buildPermissionsAllowed(context, args),
     );
   }
 }

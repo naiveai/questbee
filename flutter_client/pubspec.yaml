@@ -14,14 +14,19 @@ dependencies:
   material_design_icons_flutter: 3.2.3695
   cupertino_icons: ^0.1.2
   grouped_buttons: ^1.0.4
+  pull_to_refresh: ^1.4.3
+  flutter_markdown: ^0.2.0
 
   # Authentication
   uni_links: ^0.2.0
   url_launcher: ^5.0.2
   flutter_secure_storage: ^3.2.1
+  firebase_auth: ^0.11.1
 
-  # Reddit API
+  # Network
   draw: ^0.5.2
+  dio: ^2.1.6
+  cached_network_image: ^0.8.0
 
   # State Management
   redux: ^3.0.0
@@ -37,19 +42,19 @@ dependencies:
   firebase_messaging: ^5.0.2
   flutter_local_notifications: ^0.7.1
 
+  # Firebase Analytics
   firebase_analytics: ^3.0.2
   firebase_crashlytics: ^0.0.4
   firebase_performance: ^0.3.0
 
-  # Immutable values
+  # Backend access
+  cloud_firestore: ^0.12.5
+
+  # Easy immutable values & serialization
   built_value: ^6.6.0
 
   # Misc
-  flutter_markdown: ^0.2.0
-  dio: ^2.1.6
-  cached_network_image: ^0.8.0
   after_layout: ^1.0.7
-  pull_to_refresh: ^1.4.3
 
 dev_dependencies:
   flutter_test:
