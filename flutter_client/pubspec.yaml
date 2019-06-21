@@ -49,6 +49,7 @@ dependencies:
 
   # Backend access
   cloud_firestore: ^0.12.5
+  cloud_functions: ^0.4.0
 
   # Easy immutable values & serialization
   built_value: ^6.6.0

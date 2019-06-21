@@ -10,18 +10,15 @@ class RedditAPIWrapper {
     client = Reddit.createInstalledFlowInstance(
       clientId: redditConfig.clientId,
       userAgent: redditConfig.userAgent,
-      redirectUri: redditConfig.backendRedirectUri,
+      redirectUri: redditConfig.redirectUri,
     );
 
     return client;
   }
 
-  Future<Reddit> initializeWithCredentials(Map credentials) async {
+  Future<Reddit> initializeWithCredentials(String credentials) async {
     client = await Reddit.restoreAuthenticatedInstance(
-      json.encode({
-        ...credentials,
-        "tokenEndpoint": "https://www.reddit.com/api/v1/access_token",
-      }),
+      credentials,
       clientId: redditConfig.clientId, clientSecret: '',
       userAgent: redditConfig.userAgent,
     );

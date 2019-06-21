@@ -98,7 +98,7 @@ class AnswersChangedAction {
 ThunkAction<AppState> submitQuestionAction(Firestore firestore, QuestionModel question) {
   return (Store<AppState> store) async {
     final answers = store.state.questionsState.answers[question].toList();
-    final currentUserName = (await FirebaseAuth.instance.currentUser()).uid;
+    final currentUserName = store.state.redditState.username;
 
     await firestore.document("users/$currentUserName").setData({
       "submittedAnswers": {

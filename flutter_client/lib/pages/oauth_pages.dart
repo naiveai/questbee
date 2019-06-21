@@ -19,6 +19,7 @@ import 'package:questbee/pages/channels_page.dart';
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class RedditOAuthLauncherPage extends StatefulWidget {
   static final String route = '/reddit-oauth-launcher';
@@ -54,7 +55,7 @@ class _RedditOAuthLauncherPageState extends State<RedditOAuthLauncherPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text('Launching Reddit authorization...'),
-            SizedBox(height: 5.0),
+            SizedBox(height: 10.0),
             CircularProgressIndicator(),
           ],
         ),
@@ -85,16 +86,18 @@ class RedditOAuthRedirectPage extends StatelessWidget {
     return Center(
       child: StoreBuilder<AppState>(
         onInitialBuild: (store) {
-          final redditWrapper = Provider.of<RedditAPIWrapper>(context);
+          final reddit = Provider.of<RedditAPIWrapper>(context).client;
           final auth = Provider.of<FirebaseAuth>(context);
+          final functions = Provider.of<CloudFunctions>(context);
 
           final authCompleter = Completer();
 
           store.dispatch(
-            authenticateAfterFlowAction(redditWrapper, auth, args, authCompleter));
+            authenticateAfterFlowAction(
+              reddit, auth, functions, args['code'], authCompleter));
 
           authCompleter.future.then((_) {
-            store.dispatch(signedInAction(redditWrapper.client));
+            store.dispatch(signedInAction(reddit));
           });
         },
         builder: (context, store) {
@@ -102,7 +105,8 @@ class RedditOAuthRedirectPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text('Logging you in...'),
-              SizedBox(height: 5.0),
+              Text('This may take some time'),
+              SizedBox(height: 10.0),
               CircularProgressIndicator()
             ],
           );

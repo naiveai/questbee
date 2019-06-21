@@ -9,6 +9,9 @@ abstract class RedditState implements Built<RedditState, RedditStateBuilder> {
   static Serializer<RedditState> get serializer => _$redditStateSerializer;
 
   @nullable
+  String get username;
+
+  @nullable
   String get credentials;
 
   factory RedditState.initialState() {

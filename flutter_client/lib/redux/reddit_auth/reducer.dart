@@ -5,7 +5,11 @@ RedditState redditReducer(RedditState state, dynamic action) {
   switch(action.runtimeType) {
     case StoreCredentialsAction:
       return state.rebuild((b) => b
-        .credentials = action.credentials,
+        .credentials = action.credentials
+      );
+    case UsernameFetchedAction:
+      return state.rebuild((b) => b
+        .username = action.username
       );
     default:
       return state;

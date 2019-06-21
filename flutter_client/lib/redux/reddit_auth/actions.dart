@@ -17,6 +17,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:questbee/utils/reddit_api_wrapper.dart';
 
+import 'package:cloud_functions/cloud_functions.dart';
+
 ThunkAction<AppState> startUserSignInAction(RedditAPIWrapper redditWrapper) {
   return (Store<AppState> store) {
     final reddit = redditWrapper.initializeWithoutCredentials();
@@ -35,25 +37,21 @@ ThunkAction<AppState> startUserSignInAction(RedditAPIWrapper redditWrapper) {
 }
 
 ThunkAction<AppState> authenticateAfterFlowAction(
-    RedditAPIWrapper redditWrapper, FirebaseAuth auth, Map args, Completer completer) {
+    Reddit reddit, FirebaseAuth auth, CloudFunctions functions,
+    String code, Completer completer) {
   return (Store<AppState> store) async {
-    final accessTokenStartTime =
-        DateTime.fromMillisecondsSinceEpoch(int.parse(args["accessTokenStartTime"]));
+    await reddit.auth.authorize(code);
 
-    // We subtract 10 seconds to account for potential latency
-    // from when the token came back from the server.
-    final expirationDateTime =
-        accessTokenStartTime.add(
-          Duration(seconds: int.parse(args["expires_in"]) - 10));
+    final authFunction =
+        functions.getHttpsCallable(
+          functionName: "appRedditFirebaseAuth"
+        );
 
-    await redditWrapper.initializeWithCredentials({
-      "accessToken": args["access_token"],
-      "refreshToken": args["refresh_token"],
-      "scopes": redditConfig.permissionScopes,
-      "expiration": expirationDateTime.millisecondsSinceEpoch,
+    final result = await authFunction.call({
+      "accessToken": reddit.auth.credentials.accessToken,
     });
 
-    auth.signInWithCustomToken(token: args["firebaseToken"]);
+    await auth.signInWithCustomToken(token: result.data['firebaseToken']);
 
     completer.complete();
   };
@@ -76,4 +74,10 @@ class StoreCredentialsAction {
   String credentials;
 
   StoreCredentialsAction(this.credentials);
+}
+
+class UsernameFetchedAction {
+  String username;
+
+  UsernameFetchedAction(this.username);
 }

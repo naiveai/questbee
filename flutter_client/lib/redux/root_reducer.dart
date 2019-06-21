@@ -7,6 +7,7 @@ import 'package:questbee/redux/preferences/reducer.dart';
 import 'package:questbee/redux/notifications/epics.dart';
 import 'package:questbee/redux/deep_links/epics.dart';
 import 'package:questbee/redux/questions/epics.dart';
+import 'package:questbee/redux/reddit_auth/epics.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,6 +29,7 @@ rootEpic(
   return combineEpics(<Epic<AppState>>[
     channelSubscriptionNotificationsEpic(firebaseMessaging),
     submittedAnswersEpic(firestore, auth),
+    authStateChangedEpic(auth),
     uriLinksEpic,
   ]);
 }
