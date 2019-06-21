@@ -27,6 +27,8 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 import 'package:built_collection/built_collection.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class QuestionsPage extends StatefulWidget {
   static final String route = '/questions';
 
@@ -85,7 +87,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
   }
 
   Widget _buildQuestionsList(BuildContext context, _QuestionsViewModel vm) {
-    final reddit = Provider.of<RedditAPIWrapper>(context).client;
+    final firestore = Provider.of<Firestore>(context);
 
     return ListView.separated(
       itemCount: vm.questions.length,
@@ -109,7 +111,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
                   FlatButton(
                     child: Text('SUBMIT'),
                     onPressed: () {
-                      vm.onSubmit(reddit, question);
+                      vm.onSubmit(firestore, question);
                     },
                   ),
                 ],
@@ -212,8 +214,8 @@ class _QuestionsViewModel {
       onAnswersChanged: (question, answers) {
         store.dispatch(AnswersChangedAction(question, answers));
       },
-      onSubmit: (reddit, question) {
-        store.dispatch(submitQuestionAction(reddit, question));
+      onSubmit: (firestore, question) {
+        store.dispatch(submitQuestionAction(firestore, question));
       },
       clearQuestions: () {
         store.dispatch(ClearQuestionsAction());

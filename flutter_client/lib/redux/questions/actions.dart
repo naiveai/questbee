@@ -11,6 +11,12 @@ import 'package:questbee/models/questions.dart';
 
 import 'package:built_collection/built_collection.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
+// TODO: Remove this using FirebaseAuth.onAuthStateChanged
+import 'package:firebase_auth/firebase_auth.dart';
+
 ThunkAction<AppState> loadQuestionsAction(
     Reddit reddit, List<ChannelModel> channels,
     {bool isRefresh = false}) {
@@ -89,12 +95,16 @@ class AnswersChangedAction {
   AnswersChangedAction(this.question, this.answers);
 }
 
-ThunkAction<AppState> submitQuestionAction(Reddit reddit, QuestionModel question) {
+ThunkAction<AppState> submitQuestionAction(Firestore firestore, QuestionModel question) {
   return (Store<AppState> store) async {
-    final submission = await reddit.submission(id: question.submissionId).populate();
-    final answers = store.state.questionsState.answers[question];
+    final answers = store.state.questionsState.answers[question].toList();
+    final currentUserName = (await FirebaseAuth.instance.currentUser()).uid;
 
-    await submission.reply(json.encode({'answers': answers}));
+    await firestore.document("users/$currentUserName").setData({
+      "submittedAnswers": {
+        question.questionId: answers,
+      },
+    }, merge: true);
   };
 }
 
