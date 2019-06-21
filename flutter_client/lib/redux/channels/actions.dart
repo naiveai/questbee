@@ -14,6 +14,7 @@ import 'package:questbee/pages/questions_page.dart';
 
 ThunkAction<AppState> loadChannels(Reddit reddit) {
   return (Store<AppState> store) async {
+    // TODO: Get this from Firestore, or hosting, or something?
     var channelSubbredditNames =
         List<String>.from((await
                 Dio().get("https://questbee-data.s3.amazonaws.com/channel_subreddits.json")).data);

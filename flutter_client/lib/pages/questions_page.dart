@@ -93,14 +93,31 @@ class _QuestionsPageState extends State<QuestionsPage> {
       itemCount: vm.questions.length,
       itemBuilder: (BuildContext context, int index) {
         final question = vm.questions[index];
+        final submittedAnswers =
+            vm.submittedAnswers[question.questionId]?.asList();
+        final submittedAnswersExists =
+            submittedAnswers != null && submittedAnswers.length > 0;
 
         return Question(
           question: question,
+          initialAnswers: submittedAnswers ?? [],
           headers: <Widget>[
-            Text(
-              question.channel.humanName,
-              style: Theme.of(context).textTheme.caption,
-              textAlign: TextAlign.start,
+            Row(
+              children: <Widget>[
+                Text(
+                  question.channel.humanName,
+                  style: Theme.of(context).textTheme.caption,
+                  textAlign: TextAlign.start,
+                ),
+                if(submittedAnswersExists) ...[
+                  Spacer(),
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                  ),
+                  Text('Answered'),
+                ]
+              ],
             ),
             Divider(),
           ],
@@ -109,7 +126,8 @@ class _QuestionsPageState extends State<QuestionsPage> {
               child: ButtonBar(
                 children: <Widget>[
                   FlatButton(
-                    child: Text('SUBMIT'),
+                    child: Text(
+                      submittedAnswersExists ? 'CHANGE ANSWER' : 'ANSWER'),
                     onPressed: () {
                       vm.onSubmit(firestore, question);
                     },
@@ -117,8 +135,6 @@ class _QuestionsPageState extends State<QuestionsPage> {
                 ],
               ),
             ),
-            Text(
-              "Submitted: ${vm.submittedAnswers[question.questionId]}"),
           ],
           onAnswersChanged: (List<String> answers) {
             vm.onAnswersChanged(question, answers);
@@ -243,6 +259,7 @@ class Question extends StatefulWidget {
       {Key key,
       this.headers = const [],
       this.footers = const [],
+      this.initialAnswers,
       @required this.question,
       @required this.onAnswersChanged})
       : super(key: key);
@@ -250,6 +267,7 @@ class Question extends StatefulWidget {
   final List<Widget> headers;
   final List<Widget> footers;
   final QuestionModel question;
+  final List<String> initialAnswers;
   final Function(List<String>) onAnswersChanged;
 
   @override
@@ -257,7 +275,13 @@ class Question extends StatefulWidget {
 }
 
 class _QuestionState extends State<Question> {
-  List<String> currentAnswers = [""];
+  List<String> currentAnswers;
+
+  @override
+  void initState() {
+    super.initState();
+    currentAnswers = widget.initialAnswers;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -277,6 +301,13 @@ class _QuestionState extends State<Question> {
                 widget.question.numberOfCorrectAnswers == 1 ?
                   RadioButtonGroup(
                     labels: widget.question.answers.toList(),
+                    picked: (() {
+                      try {
+                        return currentAnswers?.elementAt(0);
+                      } on RangeError {
+                        return "";
+                      }
+                    })(),
                     itemBuilder: (Radio rb, Text txt, int i) {
                       return RadioListTile(
                         title: txt,
@@ -287,7 +318,11 @@ class _QuestionState extends State<Question> {
                     },
                     onSelected: (String selected) {
                       setState(() {
-                        currentAnswers = [selected];
+                        if (currentAnswers.contains(selected)) {
+                          currentAnswers = [];
+                        } else {
+                          currentAnswers = [selected];
+                        }
                       });
 
                       widget.onAnswersChanged(currentAnswers);
@@ -295,6 +330,7 @@ class _QuestionState extends State<Question> {
                   )
                   : CheckboxGroup(
                     labels: widget.question.answers.toList(),
+                    checked: currentAnswers,
                     disabled: (() {
                       if(currentAnswers.length ==
                           widget.question.numberOfCorrectAnswers) {
