@@ -56,6 +56,7 @@ dependencies:
 
   # Misc
   after_layout: ^1.0.7
+  shimmer: ^1.0.0
 
 dev_dependencies:
   flutter_test:

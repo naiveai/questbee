@@ -19,6 +19,7 @@ abstract class QuestionModel implements Built<QuestionModel, QuestionModelBuilde
   BuiltList<QuestionBlockModel> get questionBlocks;
 
   @BuiltValueField(compare: false)
+  @nullable
   BuiltList<String> get submittedAnswers;
 
   QuestionModel._();

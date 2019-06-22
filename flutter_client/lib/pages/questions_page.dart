@@ -24,10 +24,13 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'package:built_collection/built_collection.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'dart:math';
 
 class QuestionsPage extends StatefulWidget {
   static final String route = '/questions';
@@ -86,6 +89,104 @@ class _QuestionsPageState extends State<QuestionsPage> {
     );
   }
 
+  Widget _buildLoadingState(BuildContext context) {
+    final fakeQuestion = QuestionModel((b) => b
+      ..submissionId = ""
+      ..numberOfCorrectAnswers = 2
+      ..channel.replace(ChannelModel(
+        (b) => b..subredditName = ""..humanName = "Fake Subreddit Name"))
+      ..questionId = ""
+      ..answers.replace(BuiltList<String>(["AAAAAAAAAA", "BBBBBBBB", "CCCCCCC", "DDDDDDDD"]))
+      ..questionBlocks.replace(BuiltList<QuestionBlockModel>([
+        QuestionBlockModel((b) => b
+          ..type = "text/plain"
+          ..value = """
+          """
+        )
+      ]))
+    );
+
+    final random = Random();
+
+    return ListView.separated(
+      physics: NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      itemBuilder: (BuildContext context, int index) {
+        return Shimmer.fromColors(
+          baseColor: Colors.grey[300],
+          highlightColor: Colors.grey[100],
+          child: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: double.infinity,
+                  height: 8.0,
+                  color: Colors.white,
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 2.0),
+                ),
+                Container(
+                  width: double.infinity,
+                  height: 8.0,
+                  color: Colors.white,
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 2.0),
+                ),
+                Container(
+                  width: random.nextBool() ? double.infinity : random.nextDouble() * 240.0,
+                  height: 8.0,
+                  color: Colors.white,
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10.0),
+                ),
+                Container(
+                  width: random.nextBool() ? double.infinity : random.nextDouble() * 240.0,
+                  height: 8.0,
+                  color: Colors.white,
+                ),
+                Column(
+                  children: <Widget>[
+                    Radio(
+                      value: 1,
+                      groupValue: null,
+                      onChanged: null,
+                    ),
+                    Radio(
+                      value: 2,
+                      groupValue: null,
+                      onChanged: null,
+                    ),
+                    Radio(
+                      value: 3,
+                      groupValue: null,
+                      onChanged: null,
+                    ),
+                    Radio(
+                      value: 4,
+                      groupValue: null,
+                      onChanged: null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          )
+        );
+      },
+      separatorBuilder: (BuildContext context, int index) {
+        return SizedBox(height: 15.0);
+      },
+    );
+  }
+
   Widget _buildQuestionsList(BuildContext context, _QuestionsViewModel vm) {
     final firestore = Provider.of<Firestore>(context);
 
@@ -93,10 +194,18 @@ class _QuestionsPageState extends State<QuestionsPage> {
       itemCount: vm.questions.length,
       itemBuilder: (BuildContext context, int index) {
         final question = vm.questions[index];
+
         final submittedAnswers =
             vm.submittedAnswers[question.questionId]?.asList();
         final submittedAnswersExists =
             submittedAnswers != null && submittedAnswers.length > 0;
+
+        final noAnswersAfterSubmit =
+          (submittedAnswersExists && vm.answers[question]?.length == 0);
+
+        final canSubmitQuestion =
+          (vm.answers[question]?.length == question.numberOfCorrectAnswers) ||
+          noAnswersAfterSubmit;
 
         return Question(
           question: question,
@@ -127,10 +236,13 @@ class _QuestionsPageState extends State<QuestionsPage> {
                 children: <Widget>[
                   FlatButton(
                     child: Text(
-                      submittedAnswersExists ? 'CHANGE ANSWER' : 'ANSWER'),
-                    onPressed: () {
+                      !noAnswersAfterSubmit ?
+                      (submittedAnswersExists ? 'CHANGE ANSWER' : 'ANSWER')
+                      : 'REMOVE ANSWER'
+                    ),
+                    onPressed: canSubmitQuestion ? () {
                       vm.onSubmit(firestore, question);
-                    },
+                    } : null,
                   ),
                 ],
               ),
@@ -175,9 +287,7 @@ class _QuestionsPageState extends State<QuestionsPage> {
         if (vm.questions.length == 0) {
           return Scaffold(
             appBar: _buildAppBar(context, vm),
-            body: Center(
-              child: CircularProgressIndicator()
-            ),
+            body: _buildLoadingState(context),
           );
         }
 
@@ -200,7 +310,8 @@ class _QuestionsPageState extends State<QuestionsPage> {
 
 class _QuestionsViewModel {
   _QuestionsViewModel({
-    this.isFetching, this.channels, this.questions, this.submittedAnswers,
+    this.isFetching, this.channels, this.questions,
+    this.answers, this.submittedAnswers,
     this.loadQuestions, this.onAnswersChanged,
     this.onSubmit, this.clearQuestions
   });
@@ -208,6 +319,7 @@ class _QuestionsViewModel {
   final bool isFetching;
   final BuiltList<ChannelModel> channels;
   final BuiltList<QuestionModel> questions;
+  final BuiltMap<QuestionModel, BuiltList<String>> answers;
   final BuiltMap<String, BuiltList<String>> submittedAnswers;
 
   final Function loadQuestions;
@@ -220,6 +332,7 @@ class _QuestionsViewModel {
       isFetching: store.state.questionsState.isFetching,
       channels: store.state.preferencesState.subscribedChannels,
       questions: store.state.questionsState.questions,
+      answers: store.state.questionsState.answers,
       submittedAnswers: store.state.questionsState.submittedAnswers,
       loadQuestions: (reddit, {bool isRefresh = false}) {
         store.dispatch(
@@ -245,12 +358,14 @@ class _QuestionsViewModel {
       other.isFetching == isFetching &&
       other.questions == questions &&
       other.channels == channels &&
+      other.answers == answers &&
       other.submittedAnswers == submittedAnswers
     );
   }
 
   int get hashCode {
-    return questions.hashCode ^ channels.hashCode ^ isFetching.hashCode ^ submittedAnswers.hashCode;
+    return questions.hashCode ^ channels.hashCode ^ isFetching.hashCode ^
+        answers.hashCode ^ submittedAnswers.hashCode;
   }
 }
 
@@ -295,6 +410,9 @@ class _QuestionState extends State<Question> {
             ...widget.headers,
             for (final questionBlock in widget.question.questionBlocks)
               QuestionBlockView(questionBlock: questionBlock),
+            SizedBox(height: 5.0),
+            if (widget.question.numberOfCorrectAnswers != 1)
+              Text("Select ${widget.question.numberOfCorrectAnswers} answers:"),
             Padding(
               padding: EdgeInsets.symmetric(vertical: 8.0),
               child: (

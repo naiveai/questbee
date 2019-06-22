@@ -14,13 +14,12 @@ import 'package:questbee/pages/questions_page.dart';
 
 ThunkAction<AppState> loadChannels(Reddit reddit) {
   return (Store<AppState> store) async {
-    // TODO: Get this from Firestore, or hosting, or something?
-    var channelSubbredditNames =
-        List<String>.from((await
-                Dio().get("https://questbee-data.s3.amazonaws.com/channel_subreddits.json")).data);
+    final channelSubbredditNames =
+      List<String>.from((await
+        Dio().get("https://questbee-d85f9.web.app/channelSubredditsList.json")).data);
 
-    var channelFutures = channelSubbredditNames.map((String name) async {
-      var channelSubreddit = await reddit.subreddit(name).populate();
+    final channelFutures = channelSubbredditNames.map((String name) async {
+      final channelSubreddit = await reddit.subreddit(name).populate();
 
       return ChannelModel((b) => b
         ..subredditName = name
@@ -29,7 +28,7 @@ ThunkAction<AppState> loadChannels(Reddit reddit) {
       );
     });
 
-    var channels = await Future.wait(channelFutures);
+    final channels = await Future.wait(channelFutures);
 
     store.dispatch(ChannelsLoadedAction(channels));
   };

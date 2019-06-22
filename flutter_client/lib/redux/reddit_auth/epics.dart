@@ -9,6 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 Epic<AppState> authStateChangedEpic(FirebaseAuth auth) {
   return (Stream actions, EpicStore<AppState> store) {
     return auth.onAuthStateChanged
-      .map((newUserData) => UsernameFetchedAction(newUserData.uid));
+      .map((newUserData) => UsernameFetchedAction(newUserData?.uid));
   };
 }
